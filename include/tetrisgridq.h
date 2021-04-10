@@ -9,6 +9,8 @@
 
 #include <vector>
 
+typedef QGenericMatrix<2, 2, unsigned int> Boundary;
+
 class TetrisGridQ : public QAbstractTableModel
 {
 	Q_OBJECT
@@ -35,6 +37,8 @@ private:
 	std::vector<std::vector<block>> matrix;
 	std::vector<QGenericMatrix<4, 2, unsigned int>> shapes;
 	unsigned int score;
+
+	Boundary findBoundary(unsigned int shapeID) const;
 
 public:
 	enum DataTypes {
@@ -89,6 +93,8 @@ public:
 
 public slots:
 		void spawn();
+		void moveShapeLeft(unsigned int shapeID);
+		void moveShapeRight(unsigned int shapeID);
 
 signals:
 		void rowsChanged();

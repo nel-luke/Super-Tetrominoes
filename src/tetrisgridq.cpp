@@ -141,3 +141,81 @@ void TetrisGridQ::spawn() {
 	}
 	emit dataChanged(createIndex(0, 0), createIndex(2, 4), {});
 }
+
+void TetrisGridQ::moveShapeLeft(unsigned int shapeID) {
+	// Boundary given in x y coordinates
+	// matrix is y x
+	Boundary boundary = findBoundary(shapeID);
+
+	if (boundary(0, 0) == 0)
+		return;
+
+	bool leftside[2] = {
+		matrix.at(boundary(0, 1)).at(boundary(0, 0)).id == shapeID ? true : false,
+		matrix.at(boundary(0, 1)+1).at(boundary(0, 0)).id == shapeID ? true : false
+	};
+
+	bool lefttest[2] = {
+		matrix.at(boundary(0, 1)).at(boundary(0, 0)-1).id ? true : false,
+		matrix.at(boundary(0, 1)+1).at(boundary(0, 0)-1).id ? true : false
+	};
+
+	if (( (leftside[0] & lefttest[0]) | (leftside[1] & lefttest[1]) ) == 0) {
+		for (unsigned int i = boundary(0, 1); i <= boundary(1, 1); ++i) {
+			for (unsigned int j = boundary(0, 0); j <= boundary(1, 0); ++j) {
+				matrix.at(i).at(j-1) = matrix.at(i).at(j);
+				matrix.at(i).at(j) = {0, QColor(0, 0, 0), BorderNone};
+			}
+		}
+	}
+
+	emit dataChanged(createIndex(boundary(0, 1), boundary(0, 0)-1), createIndex(boundary(1, 1), boundary(1, 0)), {});
+}
+
+void TetrisGridQ::moveShapeRight(unsigned int shapeID) {
+	// Boundary given in x y coordinates
+	// matrix is y x
+	Boundary boundary = findBoundary(shapeID);
+
+	if (boundary(1, 0) == matrix[0].size()-1)
+		return;
+
+	bool rightside[2] = {
+		matrix.at(boundary(1, 1)).at(boundary(1, 0)).id == shapeID ? true : false,
+		matrix.at(boundary(1, 1)-1).at(boundary(1, 0)).id == shapeID ? true : false
+	};
+
+	bool righttest[2] = {
+		matrix.at(boundary(1, 1)).at(boundary(1, 0)+1).id ? true : false,
+		matrix.at(boundary(1, 1)-1).at(boundary(1, 0)+1).id ? true : false
+	};
+
+	if (( (rightside[0] & righttest[0]) | (rightside[1] & righttest[1]) ) == 0) {
+		for (int i = boundary(1, 1); i >= int(boundary(0, 1)); --i) {
+			for (int j = boundary(1, 0); j >= int(boundary(0, 0)); --j) {
+				matrix.at(i).at(j+1) = matrix.at(i).at(j);
+				matrix.at(i).at(j) = {0, QColor(0, 0, 0), BorderNone};
+			}
+		}
+	}
+
+	emit dataChanged(createIndex(boundary(0, 1), boundary(0, 0)), createIndex(boundary(1, 1), boundary(1, 0)+1), {});
+}
+
+Boundary TetrisGridQ::findBoundary(unsigned int shapeID) const {
+	unsigned int t[] = {99, 99, 0, 0};
+	Boundary result(t);
+	for (unsigned int i = 0; i < matrix.size(); ++i) {
+		for (unsigned int j = 0; j < matrix[0].size(); ++j) {
+			if (matrix.at(i).at(j).id == shapeID) {
+				result(0, 0) = qMin(result(0, 0), j);
+				result(0, 1) = qMin(result(0, 1), i);
+
+				result(1, 0) = qMax(result(1, 0), j);
+				result(1, 1) = qMax(result(1, 1), i);
+			}
+		}
+	}
+
+	return result;
+}

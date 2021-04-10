@@ -17,20 +17,31 @@ Window {
 		id: data; rows: 6; columns: 6;
 	}
 
+//	Timer {
+//		id: tickTimer
+//		interval: 1000
+//		repeat: true
+//		onTriggered: { data.
+//	}
+
 	onHeightChanged: table.forceLayout()
 	onWidthChanged: table.forceLayout()
 
 	Rectangle {
 		id: background
 		anchors.fill: parent
+		focus: true
 		color: "blue"
+		Keys.onLeftPressed: { data.moveShapeLeft(1) }
+		Keys.onRightPressed: { data.moveShapeRight(1) }
+
 	}
 
 	Column {
 		anchors.fill: parent
 
 		Button {
-			onClicked: { data.spawn() }
+			onClicked: { data.spawn(); background.focus = true }
 		}
 
 		TableView {
