@@ -14,7 +14,7 @@ Window {
 	property int borderSize: 2
 
 	TetrisGridQ {
-		id: data; rows: 6; columns: 6;
+		id: data; rows: 16; columns: 16;
 	}
 
 //	Timer {
@@ -32,10 +32,11 @@ Window {
 		anchors.fill: parent
 		focus: true
 		color: "blue"
-		Keys.onLeftPressed: { data.moveShapeLeft(1) }
-		Keys.onRightPressed: { data.moveShapeRight(1) }
-		Keys.onDownPressed: { data.moveShapeDown(1) }
-		Keys.onUpPressed: { data.moveShapeUp(1) }
+		Keys.onLeftPressed: { data.moveShapeLeft(data.shape1) }
+		Keys.onRightPressed: { data.moveShapeRight(data.shape1) }
+		Keys.onDownPressed: { data.moveShapeDown(data.shape1) }
+		Keys.onUpPressed: { data.moveShapeUp(data.shape1) }
+		Keys.onSpacePressed: { data.spawn() }
 	}
 
 	Column {

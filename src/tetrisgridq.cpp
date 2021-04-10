@@ -1,7 +1,7 @@
 #include "../include/tetrisgridq.h"
 #include "../include/c_shapes.h"
 
-TetrisGridQ::TetrisGridQ(QObject* parent) : QAbstractTableModel(parent), matrix(1), score(0) {
+TetrisGridQ::TetrisGridQ(QObject* parent) : QAbstractTableModel(parent), matrix(1), shape1(0), score(0) {
 	matrix[0].push_back({ 0, QColor(0, 0, 0), BorderNone });
 
 	for (int i = 0; i < numShapes; ++i) {
@@ -9,7 +9,7 @@ TetrisGridQ::TetrisGridQ(QObject* parent) : QAbstractTableModel(parent), matrix(
 	}
 }
 
-void TetrisGridQ::setRows(int count) {
+void TetrisGridQ::setRows(unsigned int count) {
 		if (count > getRows()) {
 				insertRows(0, count - getRows());
 		} else if (count < getRows()) {
@@ -18,7 +18,7 @@ void TetrisGridQ::setRows(int count) {
 		emit rowsChanged();
 }
 
-void TetrisGridQ::setColumns(int count) {
+void TetrisGridQ::setColumns(unsigned int count) {
 		if (count > getColumns()) {
 				insertColumns(0, count - getColumns());
 		} else if (count < getColumns()) {
@@ -130,12 +130,12 @@ bool TetrisGridQ::removeColumns(int from_column, int count, const QModelIndex &p
 void TetrisGridQ::spawn() {
 	QGenericMatrix<4, 2, unsigned int> current_shape = shapes[1];
 	QColor shape_color(0, 255, 255);
-	unsigned int id = 1;
+	shape1++;
 
 	for (int i = 0; i < 2; ++i) {
 		for (int j = 0; j < 4; ++j) {
 			if (current_shape(i, j)) {
-				matrix.at(i).at(j) = {id, shape_color, current_shape(i, j)};
+				matrix.at(i).at(j) = {shape1, shape_color, current_shape(i, j)};
 			}
 		}
 	}
@@ -155,7 +155,7 @@ void TetrisGridQ::moveShapeLeft(unsigned int shapeID) {
 	Boundary leftTest = boundary;
 	leftTest(0, 0) -= 1;
 	leftTest(1, 0) -= 1;
-	BoolMatrix leftShape = findShape(~shapeID, leftTest);
+	BoolMatrix leftShape = findShape(shapeID, leftTest, true);
 
 	if (dotMatrix(shape, leftShape) == 0) {
 		for (unsigned int i = boundary(0, 1); i <= boundary(1, 1); ++i) {
@@ -182,7 +182,7 @@ void TetrisGridQ::moveShapeRight(unsigned int shapeID) {
 	Boundary rightTest = boundary;
 	rightTest(0, 0) += 1;
 	rightTest(1, 0) += 1;
-	BoolMatrix rightShape = findShape(~shapeID, rightTest);
+	BoolMatrix rightShape = findShape(shapeID, rightTest, true);
 
 	if (dotMatrix(shape, rightShape) == 0) {
 		for (unsigned int i = boundary(1, 1); i >= boundary(0, 1); --i) {
@@ -214,8 +214,8 @@ void TetrisGridQ::moveShapeDown(unsigned int shapeID) {
 
 	Boundary downTest = boundary;
 	downTest(0, 1) += 1;
-	downTest(0, 1) += 1;
-	BoolMatrix downShape = findShape(~shapeID, downTest);
+	downTest(1, 1) += 1;
+	BoolMatrix downShape = findShape(shapeID, downTest, true);
 
 	if (dotMatrix(shape, downShape) == 0) {
 		for (unsigned int i = boundary(1, 1); i >= boundary(0, 1); --i) {
@@ -248,7 +248,7 @@ void TetrisGridQ::moveShapeUp(unsigned int shapeID) {
 	Boundary upTest = boundary;
 	upTest(0, 1) -= 1;
 	upTest(1, 1) -= 1;
-	BoolMatrix upShape = findShape(~shapeID, upTest);
+	BoolMatrix upShape = findShape(shapeID, upTest, true);
 
 	if (dotMatrix(shape, upShape) == 0) {
 		for (unsigned int i = boundary(0, 1); i <= boundary(1, 1); ++i) {
@@ -280,13 +280,15 @@ Boundary TetrisGridQ::findBoundary(unsigned int shapeID) const {
 	return result;
 }
 
-BoolMatrix TetrisGridQ::findShape(unsigned int shapeID, const Boundary& boundary) const {
-	BoolMatrix shape(0);
+BoolMatrix TetrisGridQ::findShape(unsigned int shapeID, const Boundary& boundary, bool negate) const {
+	unsigned int rows = boundary(1, 1) - boundary(0, 1) + 1;
+	unsigned int columns = boundary(1, 0) - boundary(0, 0) + 1;
+	BoolMatrix shape(rows, std::vector<bool>(columns, 0));
+
 	for (unsigned int i = boundary(0, 1); i <= boundary(1, 1); ++i) {
-		shape.push_back({0});
 		for (unsigned int j = boundary(0, 0); j <= boundary(1, 0); ++j) {
-			if ( !(matrix.at(i).at(j).id ^ shapeID) ) {
-			 shape.back().push_back(1);
+			if ( (matrix.at(i).at(j).id == shapeID) != negate && matrix.at(i).at(j).id != 0) {
+			 shape.at(i - boundary(0, 1)).at(j - boundary(0, 0)) = 1;
 			}
 		}
 	}
