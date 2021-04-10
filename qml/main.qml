@@ -34,7 +34,8 @@ Window {
 		color: "blue"
 		Keys.onLeftPressed: { data.moveShapeLeft(1) }
 		Keys.onRightPressed: { data.moveShapeRight(1) }
-
+		Keys.onDownPressed: { data.moveShapeDown(1) }
+		Keys.onUpPressed: { data.moveShapeUp(1) }
 	}
 
 	Column {

@@ -10,6 +10,7 @@
 #include <vector>
 
 typedef QGenericMatrix<2, 2, unsigned int> Boundary;
+typedef std::vector<std::vector<bool>> BoolMatrix;
 
 class TetrisGridQ : public QAbstractTableModel
 {
@@ -39,6 +40,8 @@ private:
 	unsigned int score;
 
 	Boundary findBoundary(unsigned int shapeID) const;
+	BoolMatrix findShape(unsigned int shapeID, const Boundary& boundary) const;
+	bool dotMatrix(const BoolMatrix& A, const BoolMatrix& B) const;
 
 public:
 	enum DataTypes {
@@ -95,6 +98,8 @@ public slots:
 		void spawn();
 		void moveShapeLeft(unsigned int shapeID);
 		void moveShapeRight(unsigned int shapeID);
+		void moveShapeDown(unsigned int shapeID);
+		void moveShapeUp(unsigned int shapeID);
 
 signals:
 		void rowsChanged();
