@@ -15,6 +15,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 INCLUDEPATH += include/
 HEADERS = \
+    include/c_shapes.h \
     include/tetrisgridq.h
 SOURCES = src/main.cpp \
     src/tetrisgridq.cpp
