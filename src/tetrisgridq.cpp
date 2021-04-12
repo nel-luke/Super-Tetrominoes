@@ -128,7 +128,7 @@ bool TetrisGridQ::removeColumns(int from_column, int count, const QModelIndex &p
 }
 
 void TetrisGridQ::spawn() {
-	QGenericMatrix<4, 2, unsigned int> current_shape = shapes[1];
+	QGenericMatrix<4, 2, unsigned int> current_shape = shapes[2];
 	QColor shape_color(0, 255, 255);
 	shape1++;
 
@@ -142,53 +142,57 @@ void TetrisGridQ::spawn() {
 	emit dataChanged(createIndex(0, 0), createIndex(2, 4), {});
 }
 
-void TetrisGridQ::moveShapeLeft(unsigned int shapeID) {
+void TetrisGridQ::moveShapeLeft(unsigned int shape_id) {
 	// Boundary given in x y coordinates
 	// matrix is y x
-	Boundary boundary = findBoundary(shapeID);
+	boundary shape_boundary = findBoundary(shape_id);
 
-	if (boundary(0, 0) == 0)
+	if (shape_boundary.ax == 0)
 		return;
 
-	BoolMatrix shape = findShape(shapeID, boundary);
+	BoolMatrix shape = findShape(shape_id, shape_boundary);
 
-	Boundary leftTest = boundary;
-	leftTest(0, 0) -= 1;
-	leftTest(1, 0) -= 1;
-	BoolMatrix leftShape = findShape(shapeID, leftTest, true);
+	boundary test_boundary = shape_boundary;
+	test_boundary.ax -= 1;
+	test_boundary.bx -= 1;
+	BoolMatrix test = findShape(shape_id, test_boundary, true);
 
-	if (dotMatrix(shape, leftShape) == 0) {
-		for (unsigned int i = boundary(0, 1); i <= boundary(1, 1); ++i) {
-			for (unsigned int j = boundary(0, 0); j <= boundary(1, 0); ++j) {
-				matrix.at(i).at(j-1) = matrix.at(i).at(j);
-				matrix.at(i).at(j) = {0, QColor(0, 0, 0), BorderNone};
+	if (dotMatrix(shape, test) == 0) {
+		for (unsigned int i = shape_boundary.ay; i <= shape_boundary.by; ++i) {
+			for (unsigned int j = shape_boundary.ax; j <= shape_boundary.bx; ++j) {
+				if (matrix.at(i).at(j).id == shape_id) {
+					matrix.at(i).at(j-1) = matrix.at(i).at(j);
+					matrix.at(i).at(j) = {0, QColor(0, 0, 0), BorderNone};
+				}
 			}
 		}
-	}
 
-	emit dataChanged(createIndex(boundary(0, 1), boundary(0, 0)-1), createIndex(boundary(1, 1), boundary(1, 0)), {});
+		emit dataChanged(createIndex(test_boundary.ay, test_boundary.ax), createIndex(shape_boundary.by, shape_boundary.bx), {});
+	}
 }
 
-void TetrisGridQ::moveShapeRight(unsigned int shapeID) {
+void TetrisGridQ::moveShapeRight(unsigned int shape_id) {
 	// Boundary given in x y coordinates
 	// matrix is y x
-	Boundary boundary = findBoundary(shapeID);
+	boundary shape_boundary = findBoundary(shape_id);
 
-	if (boundary(1, 0) == matrix[0].size()-1)
+	if (shape_boundary.bx == matrix[0].size()-1)
 		return;
 
-	BoolMatrix shape = findShape(shapeID, boundary);
+	BoolMatrix shape = findShape(shape_id, shape_boundary);
 
-	Boundary rightTest = boundary;
-	rightTest(0, 0) += 1;
-	rightTest(1, 0) += 1;
-	BoolMatrix rightShape = findShape(shapeID, rightTest, true);
+	boundary test_boundary = shape_boundary;
+	test_boundary.ax += 1;
+	test_boundary.bx += 1;
+	BoolMatrix test = findShape(shape_id, test_boundary, true);
 
-	if (dotMatrix(shape, rightShape) == 0) {
-		for (unsigned int i = boundary(1, 1); i >= boundary(0, 1); --i) {
-			for (unsigned int j = boundary(1, 0); j >= boundary(0, 0); --j) {
-				matrix.at(i).at(j+1) = matrix.at(i).at(j);
-				matrix.at(i).at(j) = {0, QColor(0, 0, 0), BorderNone};
+	if (dotMatrix(shape, test) == 0) {
+		for (unsigned int i = shape_boundary.by; i >= shape_boundary.ay; --i) {
+			for (unsigned int j = shape_boundary.bx; j >= shape_boundary.ax; --j) {
+				if (matrix.at(i).at(j).id == shape_id) {
+					matrix.at(i).at(j+1) = matrix.at(i).at(j);
+					matrix.at(i).at(j) = {0, QColor(0, 0, 0), BorderNone};
+				}
 
 				if (j == 0)
 					break;
@@ -197,31 +201,33 @@ void TetrisGridQ::moveShapeRight(unsigned int shapeID) {
 			if (i == 0)
 				break;
 		}
-	}
 
-	emit dataChanged(createIndex(boundary(0, 1), boundary(0, 0)), createIndex(boundary(1, 1), boundary(1, 0)+1), {});
+		emit dataChanged(createIndex(shape_boundary.ay, shape_boundary.ax), createIndex(test_boundary.by, test_boundary.bx), {});
+	}
 }
 
-void TetrisGridQ::moveShapeDown(unsigned int shapeID) {
+void TetrisGridQ::moveShapeDown(unsigned int shape_id) {
 	// Boundary given in x y coordinates
 	// matrix is y x
-	Boundary boundary = findBoundary(shapeID);
+	boundary shape_boundary = findBoundary(shape_id);
 
-	if (boundary(1, 1) == matrix.size()-1)
+	if (shape_boundary.by == matrix.size()-1)
 		return;
 
-	BoolMatrix shape = findShape(shapeID, boundary);
+	BoolMatrix shape = findShape(shape_id, shape_boundary);
 
-	Boundary downTest = boundary;
-	downTest(0, 1) += 1;
-	downTest(1, 1) += 1;
-	BoolMatrix downShape = findShape(shapeID, downTest, true);
+	boundary test_boundary = shape_boundary;
+	test_boundary.ay += 1;
+	test_boundary.by += 1;
+	BoolMatrix test = findShape(shape_id, test_boundary, true);
 
-	if (dotMatrix(shape, downShape) == 0) {
-		for (unsigned int i = boundary(1, 1); i >= boundary(0, 1); --i) {
-			for (unsigned int j = boundary(1, 0); j >= boundary(0, 0); --j) {
-				matrix.at(i+1).at(j) = matrix.at(i).at(j);
-				matrix.at(i).at(j) = {0, QColor(0, 0, 0), BorderNone};
+	if (dotMatrix(shape, test) == 0) {
+		for (unsigned int i = shape_boundary.by; i >= shape_boundary.ay; --i) {
+			for (unsigned int j = shape_boundary.bx; j >= shape_boundary.ax; --j) {
+				if (matrix.at(i).at(j).id == shape_id) {
+					matrix.at(i+1).at(j) = matrix.at(i).at(j);
+					matrix.at(i).at(j) = {0, QColor(0, 0, 0), BorderNone};
+				}
 
 				if (j == 0)
 					break;
@@ -230,70 +236,101 @@ void TetrisGridQ::moveShapeDown(unsigned int shapeID) {
 			if (i == 0)
 				break;
 		}
-	}
 
-	emit dataChanged(createIndex(boundary(0, 1), boundary(0, 0)), createIndex(boundary(1, 1)+1, boundary(1, 0)), {});
+		emit dataChanged(createIndex(shape_boundary.ay, shape_boundary.ax), createIndex(test_boundary.by, test_boundary.bx), {});
+	}
 }
 
-void TetrisGridQ::moveShapeUp(unsigned int shapeID) {
+void TetrisGridQ::moveShapeUp(unsigned int shape_id) {
 	// Boundary given in x y coordinates
 	// matrix is y x
-	Boundary boundary = findBoundary(shapeID);
+	boundary shape_boundary = findBoundary(shape_id);
 
-	if (boundary(0, 1) == 0)
+	if (shape_boundary.ay == 0)
 		return;
 
-	BoolMatrix shape = findShape(shapeID, boundary);
+	BoolMatrix shape = findShape(shape_id, shape_boundary);
 
-	Boundary upTest = boundary;
-	upTest(0, 1) -= 1;
-	upTest(1, 1) -= 1;
-	BoolMatrix upShape = findShape(shapeID, upTest, true);
+	boundary test_boundary = shape_boundary;
+	test_boundary.ay -= 1;
+	test_boundary.by -= 1;
+	BoolMatrix test = findShape(shape_id, test_boundary, true);
 
-	if (dotMatrix(shape, upShape) == 0) {
-		for (unsigned int i = boundary(0, 1); i <= boundary(1, 1); ++i) {
-			for (unsigned int j = boundary(0, 0); j <= boundary(1, 0); ++j) {
-				matrix.at(i-1).at(j) = matrix.at(i).at(j);
-				matrix.at(i).at(j) = {0, QColor(0, 0, 0), BorderNone};
+	if (dotMatrix(shape, test) == 0) {
+		for (unsigned int i = shape_boundary.ay; i <= shape_boundary.by; ++i) {
+			for (unsigned int j = shape_boundary.ax; j <= shape_boundary.bx; ++j) {
+				if (matrix.at(i).at(j).id == shape_id) {
+					matrix.at(i-1).at(j) = matrix.at(i).at(j);
+					matrix.at(i).at(j) = {0, QColor(0, 0, 0), BorderNone};
+				}
 			}
 		}
-	}
 
-	emit dataChanged(createIndex(boundary(0, 1)-1, boundary(0, 0)), createIndex(boundary(1, 1), boundary(1, 0)), {});
+		emit dataChanged(createIndex(test_boundary.ay, test_boundary.ax), createIndex(shape_boundary.by, shape_boundary.bx), {});
+	}
 }
 
-Boundary TetrisGridQ::findBoundary(unsigned int shapeID) const {
-	unsigned int t[] = {99, 99, 0, 0};
-	Boundary result(t);
+void TetrisGridQ::rotateShape(unsigned int shape_id) {
+	rotateShapeHelper(shape_id, false);
+}
+
+void TetrisGridQ::c_rotateShape(unsigned int shape_id) {
+	rotateShapeHelper(shape_id, true);
+}
+
+TetrisGridQ::boundary TetrisGridQ::findBoundary(unsigned int shape_id) const {
+	boundary t = {99, 99, 0, 0};
 	for (unsigned int i = 0; i < matrix.size(); ++i) {
 		for (unsigned int j = 0; j < matrix[0].size(); ++j) {
-			if (matrix.at(i).at(j).id == shapeID) {
-				result(0, 0) = qMin(result(0, 0), j);
-				result(0, 1) = qMin(result(0, 1), i);
+			if (matrix.at(i).at(j).id == shape_id) {
+				t.ax = qMin(t.ax, j);
+				t.ay = qMin(t.ay, i);
 
-				result(1, 0) = qMax(result(1, 0), j);
-				result(1, 1) = qMax(result(1, 1), i);
+				t.bx = qMax(t.bx, j);
+				t.by = qMax(t.by, i);
 			}
 		}
 	}
 
-	return result;
+	return t;
 }
 
-BoolMatrix TetrisGridQ::findShape(unsigned int shapeID, const Boundary& boundary, bool negate) const {
-	unsigned int rows = boundary(1, 1) - boundary(0, 1) + 1;
-	unsigned int columns = boundary(1, 0) - boundary(0, 0) + 1;
+BoolMatrix TetrisGridQ::findShape(unsigned int shape_id, const boundary& b, bool negate) const {
+	unsigned int rows = b.by - b.ay + 1;
+	unsigned int columns = b.bx - b.ax + 1;
 	BoolMatrix shape(rows, std::vector<bool>(columns, 0));
 
-	for (unsigned int i = boundary(0, 1); i <= boundary(1, 1); ++i) {
-		for (unsigned int j = boundary(0, 0); j <= boundary(1, 0); ++j) {
-			if ( (matrix.at(i).at(j).id == shapeID) != negate && matrix.at(i).at(j).id != 0) {
-			 shape.at(i - boundary(0, 1)).at(j - boundary(0, 0)) = 1;
+	for (unsigned int i = b.ay; i <= b.by; ++i) {
+		for (unsigned int j = b.ax; j <= b.bx; ++j) {
+			if ( (matrix.at(i).at(j).id == shape_id) != negate && matrix.at(i).at(j).id != 0) {
+			 shape.at(i - b.ay).at(j - b.ax) = 1;
 			}
 		}
 	}
 
 	return shape;
+}
+
+BoolMatrix TetrisGridQ::rotateMatrix(const BoolMatrix& A, bool counter) const {
+	BoolMatrix result(A[0].size(), std::vector<bool>(A.size(), 0));
+
+	if (!counter) {
+		unsigned int o = A.size() - 1;
+		for (unsigned int i = 0; i < A.size(); ++i) {
+			for (unsigned int j = 0; j < A[0].size(); ++j) {
+				result.at(j).at(o-i) = A.at(i).at(j);
+			}
+		}
+	} else {
+		unsigned int o = A[0].size() - 1;
+		for (unsigned int i = 0; i < A.size(); ++i) {
+			for (unsigned int j = 0; j < A[0].size(); ++j) {
+				result.at(o-j).at(i) = A.at(i).at(j);
+			}
+		}
+	}
+
+	return result;
 }
 
 bool TetrisGridQ::dotMatrix(const BoolMatrix& A, const BoolMatrix& B) const {
@@ -309,3 +346,55 @@ bool TetrisGridQ::dotMatrix(const BoolMatrix& A, const BoolMatrix& B) const {
 
 	return result;
 }
+
+void TetrisGridQ::rotateShapeHelper(unsigned int shape_id, bool counter) {
+	boundary shape_boundary = findBoundary(shape_id);
+
+	BoolMatrix shape = findShape(shape_id, shape_boundary);
+	BoolMatrix r_shape = rotateMatrix(shape, counter);
+
+	double del_x = (double(shape_boundary.bx) - shape_boundary.ax)/2;
+	double del_y = (double(shape_boundary.by) - shape_boundary.ay)/2;
+	unsigned int mid_x = floor((shape_boundary.ax + shape_boundary.bx + 1)/2);
+	unsigned int mid_y = floor((shape_boundary.ay + shape_boundary.by + 1)/2);
+
+	boundary test_boundary = {mid_x - int(ceil(del_y)), mid_y - int(ceil(del_x)), mid_x + int(floor(del_y)), mid_y + int(floor(del_x))};
+
+	BoolMatrix test = findShape(shape_id, test_boundary, true);
+
+	if (dotMatrix(r_shape, test) == 0) {
+		block tmp;
+		for (unsigned int i = shape_boundary.ay; i <= shape_boundary.by; ++i) {
+			for (unsigned int j = shape_boundary.ax; j <= shape_boundary.bx; ++j) {
+				if (matrix.at(i).at(j).id == shape_id) {
+					tmp = matrix.at(i).at(j);
+					matrix.at(i).at(j) = {0, QColor(0, 0, 0), BorderNone};
+				}
+			}
+		}
+
+		unsigned int y = 0;
+		unsigned int del_x = test_boundary.bx - test_boundary.ax;
+		unsigned int del_y = test_boundary.by - test_boundary.ay;
+		for (unsigned int i = test_boundary.ay; i <= test_boundary.by; ++i) {
+			unsigned int x = 0;
+			for (unsigned int j = test_boundary.ax; j <= test_boundary.bx; ++j) {
+				if (r_shape.at(y).at(x)) {
+					matrix.at(i).at(j) = tmp;
+					matrix.at(i).at(j).properties =
+							((x == 0) || !(r_shape.at(y).at(x-1)) ? 1 : 0) << 0 |
+							((x == del_x) || !(r_shape.at(y).at(x+1)) ? 1 : 0) << 1 |
+							((y == 0) || !(r_shape.at(y-1).at(x)) ? 1 : 0) << 2 |
+							((y == del_y) || !(r_shape.at(y+1).at(x)) ? 1 : 0) << 3;
+				}
+				x++;
+			}
+			y++;
+		}
+
+		emit dataChanged(createIndex(qMin(shape_boundary.ay, test_boundary.ay), qMin(shape_boundary.ax, test_boundary.ax)),
+										 createIndex(qMax(shape_boundary.by, test_boundary.by), qMax(shape_boundary.bx, test_boundary.bx)), {});
+	}
+}
+
+

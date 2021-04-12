@@ -8,8 +8,8 @@
 #include <qqml.h>
 
 #include <vector>
+#include <cmath>
 
-typedef QGenericMatrix<2, 2, unsigned int> Boundary;
 typedef std::vector<std::vector<bool>> BoolMatrix;
 
 class TetrisGridQ : public QAbstractTableModel
@@ -36,14 +36,23 @@ private:
 		unsigned int properties;
 	};
 
+	struct boundary {
+		unsigned int ax;
+		unsigned int ay;
+		unsigned int bx;
+		unsigned int by;
+	};
+
 	std::vector<std::vector<block>> matrix;
 	std::vector<QGenericMatrix<4, 2, unsigned int>> shapes;
 	unsigned int shape1;
 	unsigned int score;
 
-	Boundary findBoundary(unsigned int shapeID) const;
-	BoolMatrix findShape(unsigned int shapeID, const Boundary& boundary, bool negate = false) const;
+	boundary findBoundary(unsigned int shape_id) const;
+	BoolMatrix findShape(unsigned int shape_id, const boundary& b, bool negate = false) const;
+	BoolMatrix rotateMatrix(const BoolMatrix& A, bool counter = false) const;
 	bool dotMatrix(const BoolMatrix& A, const BoolMatrix& B) const;
+	void rotateShapeHelper(unsigned int shape_id, bool counter);
 
 public:
 	enum DataTypes {
@@ -99,10 +108,12 @@ public:
 
 public slots:
 		void spawn();
-		void moveShapeLeft(unsigned int shapeID);
-		void moveShapeRight(unsigned int shapeID);
-		void moveShapeDown(unsigned int shapeID);
-		void moveShapeUp(unsigned int shapeID);
+		void moveShapeLeft(unsigned int shape_id);
+		void moveShapeRight(unsigned int shape_id);
+		void moveShapeDown(unsigned int shape_id);
+		void moveShapeUp(unsigned int shape_id);
+		void rotateShape(unsigned int shape_id);
+		void c_rotateShape(unsigned int shape_id);
 
 signals:
 		void rowsChanged();

@@ -36,6 +36,13 @@ Window {
 		Keys.onRightPressed: { data.moveShapeRight(data.shape1) }
 		Keys.onDownPressed: { data.moveShapeDown(data.shape1) }
 		Keys.onUpPressed: { data.moveShapeUp(data.shape1) }
+		Keys.onPressed: {
+			if (event.key === Qt.Key_R)
+				data.rotateShape(data.shape1)
+			else if (event.key === Qt.Key_E)
+				data.c_rotateShape(data.shape1)
+		}
+
 		Keys.onSpacePressed: { data.spawn() }
 	}
 
