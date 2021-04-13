@@ -19,7 +19,6 @@ class TetrisGridQ : public QAbstractTableModel
 
 	Q_PROPERTY(unsigned int rows READ rowCount WRITE setRows NOTIFY rowsChanged)
 	Q_PROPERTY(unsigned int columns READ columnCount WRITE setColumns NOTIFY columnsChanged)
-	Q_PROPERTY(unsigned int shape1 READ getShape1 NOTIFY shape1Changed)
 
 private:
 	enum BlockProps {
@@ -45,14 +44,12 @@ private:
 
 	std::vector<std::vector<block>> matrix;
 	std::vector<QGenericMatrix<4, 2, unsigned int>> shapes;
-	unsigned int shape1;
-	unsigned int score;
 
 	boundary findBoundary(unsigned int shape_id) const;
 	BoolMatrix findShape(unsigned int shape_id, const boundary& b, bool negate = false) const;
 	BoolMatrix rotateMatrix(const BoolMatrix& A, bool counter = false) const;
 	bool dotMatrix(const BoolMatrix& A, const BoolMatrix& B) const;
-	void rotateShapeHelper(unsigned int shape_id, bool counter);
+	bool rotateShapeHelper(unsigned int shape_id, bool counter);
 
 public:
 	enum DataTypes {
@@ -69,7 +66,6 @@ public:
 	// Getter Methods
 	inline unsigned int getRows() const { return matrix.size(); }
 	inline unsigned int getColumns() const { return matrix[0].size(); }
-	inline unsigned int getShape1() const { return shape1; }
 
 	// Setter Methods
 	void setRows(unsigned int count);
@@ -107,13 +103,16 @@ public:
 			~TetrisGridQ() {};
 
 public slots:
-		void spawn();
-		void moveShapeLeft(unsigned int shape_id);
-		void moveShapeRight(unsigned int shape_id);
-		void moveShapeDown(unsigned int shape_id);
-		void moveShapeUp(unsigned int shape_id);
-		void rotateShape(unsigned int shape_id);
-		void c_rotateShape(unsigned int shape_id);
+		bool spawn(unsigned int id, unsigned int shape_type, QColor color);
+		bool moveShapeLeft(unsigned int shape_id);
+		bool moveShapeRight(unsigned int shape_id);
+		bool moveShapeDown(unsigned int shape_id);
+		bool moveShapeUp(unsigned int shape_id);
+		bool rotateShape(unsigned int shape_id);
+		bool c_rotateShape(unsigned int shape_id);
+		std::vector<int> checkRows();
+		void deleteRow(unsigned int index);
+		void reset();
 
 signals:
 		void rowsChanged();
