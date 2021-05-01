@@ -1,4 +1,4 @@
-QT += quick quickcontrols2
+QT += quick quickcontrols2 multimedia
 
 CONFIG += c++17 qt qmltypes warn_on
 
@@ -20,9 +20,11 @@ HEADERS = \
 SOURCES = src/main.cpp \
     src/tetrisgridq.cpp
 
-RESOURCES = qml/qml.qrc
+RESOURCES = resources.qrc
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_NAME = "Custom"
 QML_IMPORT_PATH += "/"
 QML_IMPORT_MAJOR_VERSION = 1
+
+DISTFILES +=

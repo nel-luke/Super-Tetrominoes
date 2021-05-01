@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/main.qml</file>
+        <file>sounds/wet_towel_on_body-09.flac</file>
+        <file>sounds/wet_towel_on_body-09.wav</file>
+        <file>sounds/hit.mp3</file>
+        <file>qml/qtquickcontrols2.conf</file>
+    </qresource>
+</RCC>

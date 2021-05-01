@@ -132,8 +132,8 @@ bool TetrisGridQ::spawn(unsigned int id, unsigned int shape_type, QColor color) 
 	shape_type = qMin(shapes.size()-1, shape_type);
 	QGenericMatrix<4, 2, unsigned int> current_shape = shapes[shape_type];
 
-	boundary spawn_point = { (unsigned int)qFloor(matrix[0].size()/2)-2, 0,
-													 (unsigned int)qFloor(matrix[0].size()/2)+1, 1 };
+	boundary spawn_point = { (unsigned int)floor(matrix[0].size()/2)-2, 0,
+													 (unsigned int)floor(matrix[0].size()/2)+1, 1 };
 
 	BoolMatrix shape(2, std::vector<bool>(4, 0));
 	for (int i = 0; i < 2; ++i) {
