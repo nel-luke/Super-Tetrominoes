@@ -17,7 +17,6 @@ Window {
 	title: qsTr("Tetris")
 
 	readonly property int borderSize: 1
-	readonly property int numShapes: 7
 	readonly property int difficulty: 20
 	readonly property int timerInt: 500
 	readonly property int button_h: 50
@@ -54,11 +53,11 @@ Window {
 		onTriggered: { Logic.checkDown(); hit1.play() }
 	}
 
-	property int row_id: 0
+	property var vanish_rows: []
 	Timer {
-		id: delayTimer
+		id: vanishTimer
 		interval: 500
-		onTriggered: { data.deleteRow(row_id); vanishBar.disappear() }
+		onTriggered: { Logic.deleteRow() }
 	}
 
 	Timer {

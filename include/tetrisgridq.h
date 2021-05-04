@@ -19,6 +19,7 @@ class TetrisGridQ : public QAbstractTableModel
 
 	Q_PROPERTY(unsigned int rows READ rowCount WRITE setRows NOTIFY rowsChanged)
 	Q_PROPERTY(unsigned int columns READ columnCount WRITE setColumns NOTIFY columnsChanged)
+	Q_PROPERTY(unsigned int numShapes READ getNumShapes)
 
 private:
 	enum BlockProps {
@@ -66,6 +67,7 @@ public:
 	// Getter Methods
 	inline unsigned int getRows() const { return matrix.size(); }
 	inline unsigned int getColumns() const { return matrix[0].size(); }
+	inline unsigned int getNumShapes() const { return shapes.size(); }
 
 	// Setter Methods
 	void setRows(unsigned int count);

@@ -31,7 +31,7 @@ function resetGame() {
 function tick() {
 	var shape_type = player1_shape_history[0]
 	while (player1_shape_history.includes(shape_type)) {
-		shape_type = Math.floor(Math.random() * numShapes)
+		shape_type = Math.floor(Math.random() * data.numShapes)
 	}
 	player1_shape_history.shift()
 	player1_shape_history.push(shape_type)
@@ -55,23 +55,34 @@ function reduceTime() {
 	//tickTimer.interval *= 1 - score/difficulty
 }
 
+function setVanishBar() {
+	if (vanish_rows.length === 0)
+		return;
+
+	vanishBar.setY(headerHeight + vanish_rows[0]*(table.height/data.rows))
+	vanishBar.appear()
+	vanishTimer.start()
+}
+
 function checkDown() {
 	if (data.moveShapeDown(player1) === false) {
-		var rows = data.checkRows()
-		for (var i = 0; i < rows.length; i++) {
-			vanishBar.setY(headerHeight + rows[i]*(table.height/data.rows))
-			vanishBar.appear()
-			row_id = rows[i]
-			delayTimer.start()
-			score++
-			reduceTime()
-		}
-
+		vanish_rows = vanish_rows.concat(data.checkRows())
+		setVanishBar()
 		tick()
 	}
+}
+
+function deleteRow() {
+	data.deleteRow(vanish_rows[0])
+	vanish_rows.shift()
+	vanishBar.disappear()
+	score++
+	reduceTime()
+	setVanishBar()
 }
 
 function dropShape(shape_id) {
 	while (data.moveShapeDown(shape_id))
 		;
+	checkDown()
 }
