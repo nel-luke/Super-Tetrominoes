@@ -5,5 +5,9 @@
         <file>sounds/wet_towel_on_body-09.wav</file>
         <file>sounds/hit.mp3</file>
         <file>qml/qtquickcontrols2.conf</file>
+        <file>qml/logic.js</file>
+        <file>qml/VanishBar.qml</file>
+        <file>qml/MainMenu.qml</file>
+        <file>qml/PauseMenu.qml</file>
     </qresource>
 </RCC>
