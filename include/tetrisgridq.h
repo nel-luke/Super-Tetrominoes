@@ -9,6 +9,8 @@
 
 #include <vector>
 #include <cmath>
+#include <cstdlib>
+#include <ctime>
 
 typedef std::vector<std::vector<bool>> BoolMatrix;
 
@@ -45,6 +47,7 @@ private:
 
 	std::vector<std::vector<block>> matrix;
 	std::vector<QGenericMatrix<4, 2, unsigned int>> shapes;
+	int new_shape_id;
 
 	boundary findBoundary(unsigned int shape_id) const;
 	BoolMatrix findShape(unsigned int shape_id, const boundary& b, bool negate = false) const;
@@ -105,11 +108,11 @@ public:
 			~TetrisGridQ() {};
 
 public slots:
-		bool spawn(unsigned int id, unsigned int shape_type, QColor color);
-		bool moveShapeLeft(unsigned int shape_id);
-		bool moveShapeRight(unsigned int shape_id);
-		bool moveShapeDown(unsigned int shape_id);
-		bool moveShapeUp(unsigned int shape_id);
+		int spawn(unsigned int shape_type, QColor color, bool alt_spawn = false);
+		int moveShapeLeft(unsigned int shape_id);
+		int moveShapeRight(unsigned int shape_id);
+		int moveShapeDown(unsigned int shape_id);
+		int moveShapeUp(unsigned int shape_id);
 		bool rotateShape(unsigned int shape_id);
 		bool c_rotateShape(unsigned int shape_id);
 		std::vector<int> checkRows();

@@ -1,12 +1,14 @@
 #include "../include/tetrisgridq.h"
 #include "../include/c_shapes.h"
 
-TetrisGridQ::TetrisGridQ(QObject* parent) : QAbstractTableModel(parent), matrix(1) {
+TetrisGridQ::TetrisGridQ(QObject* parent) : QAbstractTableModel(parent), matrix(1), new_shape_id(1) {
 	matrix[0].push_back({ 0, QColor(0, 0, 0), BorderNone });
 
 	for (int i = 0; i < numShapes; ++i) {
 		shapes.push_back(QGenericMatrix<4, 2, unsigned int>(c_shapes[i]));
 	}
+
+	srand(time(NULL));
 }
 
 void TetrisGridQ::setRows(unsigned int count) {
@@ -128,12 +130,22 @@ bool TetrisGridQ::removeColumns(int from_column, int count, const QModelIndex &p
 }
 
 // Slots
-bool TetrisGridQ::spawn(unsigned int id, unsigned int shape_type, QColor color) {
+int TetrisGridQ::spawn(unsigned int shape_type, QColor color, bool alt_spawn) {
 	shape_type = qMin(getNumShapes()-1, shape_type);
 	QGenericMatrix<4, 2, unsigned int> current_shape = shapes[shape_type];
 
-	boundary spawn_point = { (unsigned int)floor(getColumns()/2)-2, 0,
-													 (unsigned int)floor(getColumns()/2)+1, 1 };
+	unsigned int point = 0;
+	if (alt_spawn == false) {
+		point = (unsigned int)floor(getColumns()/2);
+	} else {
+		unsigned int min_x = floor(getColumns()/2)-3;
+		unsigned int max_x = floor(getColumns()/2)+3;
+
+		do
+			point = rand() % getColumns();
+		while (point > min_x && point < max_x);
+	}
+	boundary spawn_point = { point-2, 0, point+1, 1 };
 
 	BoolMatrix shape(2, std::vector<bool>(4, 0));
 	for (int i = 0; i < 2; ++i) {
@@ -142,31 +154,33 @@ bool TetrisGridQ::spawn(unsigned int id, unsigned int shape_type, QColor color) 
 		}
 	}
 
-	BoolMatrix test = findShape(id, spawn_point, true);
+	BoolMatrix test = findShape(new_shape_id, spawn_point, true);
 
 	if (dotMatrix(shape, test) == 0) {
+		unsigned int shape_id = new_shape_id++;
 		for (int i = 0; i < 2; ++i) {
 			for (int j = 0; j < 4; ++j) {
 				if (current_shape(i, j)) {
-					matrix.at(spawn_point.ay + i).at(spawn_point.ax + j) = {id, color, current_shape(i, j)};
+					matrix.at(spawn_point.ay + i).at(spawn_point.ax + j) = {shape_id, color, current_shape(i, j)};
 				}
 			}
 		}
 
-		emit dataChanged(createIndex(0, 0), createIndex(2, 4), {});
-		return true;
+		emit dataChanged(createIndex(spawn_point.ay, spawn_point.ax),
+										 createIndex(spawn_point.by, spawn_point.bx), {});
+		return shape_id;
 	} else {
-		return false;
+		return -1;
 	}
 }
 
-bool TetrisGridQ::moveShapeLeft(unsigned int shape_id) {
+int TetrisGridQ::moveShapeLeft(unsigned int shape_id) {
 	// Boundary given in x y coordinates
 	// matrix is y x
 	boundary shape_boundary = findBoundary(shape_id);
 
 	if (shape_boundary.ax == 0)
-		return false;
+		return -1;
 
 	BoolMatrix shape = findShape(shape_id, shape_boundary);
 
@@ -186,19 +200,19 @@ bool TetrisGridQ::moveShapeLeft(unsigned int shape_id) {
 		}
 
 		emit dataChanged(createIndex(test_boundary.ay, test_boundary.ax), createIndex(shape_boundary.by, shape_boundary.bx), {});
-		return true;
+		return shape_boundary.ax;
 	} else {
-		return false;
+		return -1;
 	}
 }
 
-bool TetrisGridQ::moveShapeRight(unsigned int shape_id) {
+int TetrisGridQ::moveShapeRight(unsigned int shape_id) {
 	// Boundary given in x y coordinates
 	// matrix is y x
 	boundary shape_boundary = findBoundary(shape_id);
 
 	if (shape_boundary.bx == getColumns()-1)
-		return false;
+		return -1;
 
 	BoolMatrix shape = findShape(shape_id, shape_boundary);
 
@@ -224,19 +238,19 @@ bool TetrisGridQ::moveShapeRight(unsigned int shape_id) {
 		}
 
 		emit dataChanged(createIndex(shape_boundary.ay, shape_boundary.ax), createIndex(test_boundary.by, test_boundary.bx), {});
-		return true;
+		return shape_boundary.ax;
 	} else {
-		return false;
+		return -1;
 	}
 }
 
-bool TetrisGridQ::moveShapeDown(unsigned int shape_id) {
+int TetrisGridQ::moveShapeDown(unsigned int shape_id) {
 	// Boundary given in x y coordinates
 	// matrix is y x
 	boundary shape_boundary = findBoundary(shape_id);
 
 	if (shape_boundary.by == getRows()-1)
-		return false;
+		return -1;
 
 	BoolMatrix shape = findShape(shape_id, shape_boundary);
 
@@ -262,19 +276,19 @@ bool TetrisGridQ::moveShapeDown(unsigned int shape_id) {
 		}
 
 		emit dataChanged(createIndex(shape_boundary.ay, shape_boundary.ax), createIndex(test_boundary.by, test_boundary.bx), {});
-		return true;
+		return shape_boundary.by;
 	} else {
-		return false;
+		return -1;
 	}
 }
 
-bool TetrisGridQ::moveShapeUp(unsigned int shape_id) {
+int TetrisGridQ::moveShapeUp(unsigned int shape_id) {
 	// Boundary given in x y coordinates
 	// matrix is y x
 	boundary shape_boundary = findBoundary(shape_id);
 
 	if (shape_boundary.ay == 0)
-		return false;
+		return -1;
 
 	BoolMatrix shape = findShape(shape_id, shape_boundary);
 
@@ -294,9 +308,9 @@ bool TetrisGridQ::moveShapeUp(unsigned int shape_id) {
 		}
 
 		emit dataChanged(createIndex(test_boundary.ay, test_boundary.ax), createIndex(shape_boundary.by, shape_boundary.bx), {});
-		return true;
+		return shape_boundary.by;
 	} else {
-		return false;
+		return -1;
 	}
 }
 
@@ -314,6 +328,7 @@ void TetrisGridQ::reset() {
 					col = { 0, QColor(0, 0, 0), BorderNone };
 			}
 	}
+	new_shape_id = 1;
 	emit dataChanged(createIndex(0, 0), createIndex(getRows(), getColumns()), {});
 }
 

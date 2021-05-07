@@ -1,56 +1,45 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.15
-import QtQuick.Window 2.15
-import QtMultimedia 5.15
 
 import Custom 1.0
-import "logic.js" as Logic
+import "qrc:/js/single_classic_logic.js" as Logic
 
-Window {
+Item {
+	id: root
+
 	readonly property int headerHeight: 50
-
-	id: windowRoot
-	visible: true
-	width: 720
-	height: width + headerHeight
-	title: qsTr("Tetris")
-
-	readonly property int borderSize: 1
 	readonly property int difficulty: 20
 	readonly property int timerInt: 500
-	readonly property int button_h: 50
-	readonly property int button_w: 100
-
-	readonly property var shape_colors:
-			[Material.Red, Material.Purple, Material.Blue, Material.Green,
-			Material.Yellow, Material.Orange, Material.Brown]
 
 	property int gridRows: 16
 	property int gridColumns: 16
 	property int score: 0
-	property int player1: 0
-	property var player1_shape_history: [0, 0, 0]
-	property var player1_color_history: [0, 0, 0]
 
-	TetrisGridQ {
-		id: data; rows: gridRows; columns: gridColumns;
-	}
+	required property var shape_colors
+
+	property int player1: 0
+	property var player1_shape_history: [0, 1, 2]
+	property var player1_color_history: [0, 1, 2]
+
+	signal returnToMenu()
 
 	function getColor(color_id) {
 		return Material.color(color_id)
 	}
 
-	SoundEffect {
-		id: hit1
-		//source: "qrc:/sounds/hit.mp3"
+	TetrisGridQ {
+		id: data; rows: gridRows; columns: gridColumns;
 	}
 
+	onHeightChanged: { table.forceLayout() }
+	onWidthChanged: { table.forceLayout() }
+
 	Timer {
-		id: tickTimer
+		id: player1Timer
 		interval: timerInt
 		repeat: true
-		onTriggered: { Logic.checkDown(); hit1.play() }
+		onTriggered: { Logic.servicePlayer1() }
 	}
 
 	property var vanish_rows: []
@@ -65,9 +54,6 @@ Window {
 		interval: 1000
 		onTriggered: { data.reset() }
 	}
-
-	onHeightChanged: { table.forceLayout() }
-	onWidthChanged: { table.forceLayout() }
 
 	Rectangle {
 		id: background
@@ -98,7 +84,7 @@ Window {
 				Rectangle {
 					height: parent.height
 					width: parent.width/2
-					color: Material.foreground
+					color: Material.background
 
 					Label {
 						anchors.centerIn: parent
@@ -111,12 +97,10 @@ Window {
 				Rectangle {
 					height: parent.height
 					width: parent.width/2
-					color: Material.foreground
+					color: Material.background
 
 					Button {
 						anchors.centerIn: parent
-						width: button_w
-						height: button_h
 						text: "Pause"
 						onClicked: Logic.pauseGame()
 					}
@@ -141,9 +125,8 @@ Window {
 			delegate:
 					Rectangle {
 						id: blockBorder
-						//height: table.cellHeight
-						//width: table.cellWidth
 						color: "black"
+						readonly property int borderSize: 1
 						property variant gridColors: [
 							Material.color(Material.Grey, Material.Shade300),
 							Material.color(Material.Grey, Material.Shade400)]
@@ -162,29 +145,28 @@ Window {
 		}
 	}
 
- VanishBar {
-	 id: vanishBar
-	 width: parent.width
-	 height: table.height/data.rows
- }
-
-	MainMenu {
-			id: mainMenu
-			width: parent.width
-			height: parent.height
-			backgroundColor: Material.primary
-			onQuitButtonPressed: { Logic.quitGame() }
-			onStartButtonPressed: { mainMenu.disappear(); Logic.startGame(gridRows, gridColumns) }
+	VanishBar {
+		id: vanishBar
+		width: parent.width
+		height: table.height/data.rows
 	}
 
 	PauseMenu {
 			id: pauseMenu
 			width: parent.width
 			height: parent.height
-			backgroundColor: Material.primary
+			backgroundColor: Material.background
 			onResumeButtonPressed: { Logic.resumeGame() }
-			onRestartButtonPressed: { Logic.resetGame(); data.reset(); pauseMenu.disappear();
-				Logic.startGame(gridRows, gridColumns) }
-			onQuitButtonPressed: { Logic.quitGame() }
+			onRestartButtonPressed: { Logic.restartGame() }
+			onQuitButtonPressed: { root.returnToMenu() }
+	}
+
+	GameOverMenu {
+		id: gameOverMenu
+		width: parent.width
+		height: parent.height
+		backgroundColor: Material.background
+		onRetryButtonPressed: { Logic.restartGame() }
+		onQuitButtonPressed: { root.returnToMenu() }
 	}
 }

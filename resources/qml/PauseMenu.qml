@@ -6,7 +6,6 @@ Item {
 	state: "retracted"
 
 	property alias backgroundColor: background.color
-	//required property int buttonWidth
 
 	function disappear() { root.state = "retracted" }
 	function appear() { root.state = "visible" }
@@ -26,41 +25,37 @@ Item {
 		spacing: 2
 
 		Button {
-				id: resumeButton
-				width: button_w
-				height: button_h
 				text: "Resume"
 				onClicked: resumeButtonPressed()
 		}
 
 		Button {
-			id: restartButton
-			width: button_w
-			height: button_h
 			text: "Restart"
 			onClicked: restartButtonPressed()
 		}
 
 		Button {
-			id: pauseQuitButton
-			width: button_w
-			height: button_h
-			text: "Quit"
+			text: "Quit to Menu"
 			onClicked: quitButtonPressed()
 		}
 	}
 
-	states:
-		[ State {
-				name: "retracted"
-				PropertyChanges { target: root; y: -height; visible: false; focus: false }
-			},
-			State {
-				name: "visible"
-				PropertyChanges { target: root; y: 0; visible: true; focus: true }
-			} ]
+	states: [
+		State {
+			name: "retracted"
+			PropertyChanges { target: root; y: -height; visible: false; focus: false }
+		},
+		State {
+			name: "visible"
+			PropertyChanges { target: root; y: 0; visible: true; focus: true }
+		},
+		State {
+			name: "down"
+			PropertyChanges { target: root; y: height; visible: false; focus: false }
+		}
+	]
 
-	transitions:
+	transitions: [
 		Transition {
 				from: "visible"; to: "retracted"; reversible: true
 				SequentialAnimation {
@@ -68,4 +63,5 @@ Item {
 						PropertyAnimation { properties: "visible, focus" }
 				}
 		}
+	]
 }

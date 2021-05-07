@@ -1,34 +1,37 @@
 function startGame(rows, columns) {
-		data.rows = rows
-		data.columns = columns
-		tick()
-		background.focus = true
-		tickTimer.start()
+	data.rows = rows
+	data.columns = columns
+	spawnPlayer1()
+	background.focus = true
+	player1Timer.start()
 }
 
 function pauseGame() {
-	tickTimer.stop()
+	player1Timer.stop()
 	pauseMenu.appear()
 }
 
 function resumeGame() {
 	pauseMenu.disappear()
 	background.focus = true
-	tickTimer.start()
-}
-
-function quitGame() {
-	Qt.callLater(Qt.quit)
+	player1Timer.start()
 }
 
 function resetGame() {
-	tickTimer.stop()
-	tickTimer.interval = timerInt
+	player1Timer.stop()
+	player1Timer.interval = timerInt
 	score = 0
-	player1 = 0
 }
 
-function tick() {
+function restartGame() {
+	resetGame()
+	data.reset()
+	pauseMenu.disappear()
+	gameOverMenu.disappear()
+	startGame(gridRows, gridColumns)
+}
+
+function spawnPlayer1() {
 	var shape_type = player1_shape_history[0]
 	while (player1_shape_history.includes(shape_type)) {
 		shape_type = Math.floor(Math.random() * data.numShapes)
@@ -43,11 +46,21 @@ function tick() {
 	player1_color_history.shift()
 	player1_color_history.push(shape_color)
 
-	var didSpawn = data.spawn(++player1, shape_type, getColor(shape_colors[shape_color]))
-	if (didSpawn === false) {
-		mainMenu.appear()
+	player1 = data.spawn(shape_type, getColor(shape_colors[shape_color]))
+	if (player1 === -1) {
+		gameOverMenu.appear()
 		resetGame()
 		resetTimer.start()
+	}
+}
+
+function servicePlayer1() {
+	var player1_y = data.moveShapeDown(player1)
+	if (player1_y === -1) {
+		player1_y = 0
+		vanish_rows = vanish_rows.concat(data.checkRows())
+		setVanishBar()
+		spawnPlayer1()
 	}
 }
 
@@ -64,14 +77,6 @@ function setVanishBar() {
 	vanishTimer.start()
 }
 
-function checkDown() {
-	if (data.moveShapeDown(player1) === false) {
-		vanish_rows = vanish_rows.concat(data.checkRows())
-		setVanishBar()
-		tick()
-	}
-}
-
 function deleteRow() {
 	data.deleteRow(vanish_rows[0])
 	vanish_rows.shift()
@@ -82,7 +87,7 @@ function deleteRow() {
 }
 
 function dropShape(shape_id) {
-	while (data.moveShapeDown(shape_id))
+	while (data.moveShapeDown(shape_id) !== -1)
 		;
-	checkDown()
+	//servicePlayer1()
 }

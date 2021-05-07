@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/qml">
+        <file>main.qml</file>
+        <file>VanishBar.qml</file>
+        <file>MainMenu.qml</file>
+        <file>PauseMenu.qml</file>
+        <file>SinglePlayerClassic.qml</file>
+        <file>SinglePlayerExtreme.qml</file>
+        <file>GameOverMenu.qml</file>
+    </qresource>
+    <qresource prefix="/">
+        <file>qtquickcontrols2.conf</file>
+    </qresource>
+</RCC>

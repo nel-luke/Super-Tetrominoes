@@ -20,7 +20,7 @@ HEADERS = \
 SOURCES = src/main.cpp \
     src/tetrisgridq.cpp
 
-RESOURCES = resources.qrc
+RESOURCES = resources/qml/qml.qrc resources/js/js.qrc resources/sounds/sounds.qrc
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_NAME = "Custom"
