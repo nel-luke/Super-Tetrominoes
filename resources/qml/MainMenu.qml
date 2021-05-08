@@ -15,6 +15,7 @@ Item {
 	signal quitButtonPressed()
 	signal singleplayerClassicPressed()
 
+	signal afterDisappear()
 	signal afterAppear()
 
 	Rectangle {
@@ -192,6 +193,7 @@ Item {
 					SequentialAnimation {
 						NumberAnimation { properties: "y"; easing.type: Easing.InOutQuad; duration: 500 }
 						PropertyAnimation { properties: "visible, focus" }
+						ScriptAction { script: { root.afterDisappear() } }
 					}
 			},
 		Transition {

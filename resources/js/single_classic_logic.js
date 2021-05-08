@@ -1,7 +1,5 @@
-function startGame(rows, columns) {
-	data.rows = rows
-	data.columns = columns
-	spawnPlayer1()
+function goGame() {
+	pauseButton.enabled = true
 	background.focus = true
 	player1Timer.start()
 }
@@ -12,23 +10,23 @@ function pauseGame() {
 }
 
 function resumeGame() {
+	pauseButton.enabled = false
 	pauseMenu.disappear()
-	background.focus = true
-	player1Timer.start()
 }
 
 function resetGame() {
 	player1Timer.stop()
-	player1Timer.interval = timerInt
-	score = 0
+	player1Timer.interval = root.timerInt
+	root.score = 0
+	root.player1 = 0
 }
 
 function restartGame() {
 	resetGame()
 	data.reset()
+	pauseButton.enabled = false
 	pauseMenu.disappear()
 	gameOverMenu.disappear()
-	startGame(gridRows, gridColumns)
 }
 
 function spawnPlayer1() {
@@ -89,5 +87,4 @@ function deleteRow() {
 function dropShape(shape_id) {
 	while (data.moveShapeDown(shape_id) !== -1)
 		;
-	//servicePlayer1()
 }

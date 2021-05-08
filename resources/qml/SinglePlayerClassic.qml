@@ -4,6 +4,7 @@ import QtQuick.Controls.Material 2.15
 
 import Custom 1.0
 import "qrc:/js/single_classic_logic.js" as Logic
+import "qrc:/qml/types"
 
 Item {
 	id: root
@@ -24,12 +25,14 @@ Item {
 
 	signal returnToMenu()
 
+	function start() { root.forceActiveFocus(); countDown.activate() }
+
 	function getColor(color_id) {
 		return Material.color(color_id)
 	}
 
 	TetrisGridQ {
-		id: data; rows: gridRows; columns: gridColumns;
+		id: data; rows: root.gridRows; columns: root.gridColumns;
 	}
 
 	onHeightChanged: { table.forceLayout() }
@@ -100,9 +103,11 @@ Item {
 					color: Material.background
 
 					Button {
+						id: pauseButton
+						enabled: false
 						anchors.centerIn: parent
 						text: "Pause"
-						onClicked: Logic.pauseGame()
+						onClicked: { Logic.pauseGame() }
 					}
 				}
 			}
@@ -159,6 +164,8 @@ Item {
 			onResumeButtonPressed: { Logic.resumeGame() }
 			onRestartButtonPressed: { Logic.restartGame() }
 			onQuitButtonPressed: { root.returnToMenu() }
+
+			onAfterDisappear: { countDown.activate() }
 	}
 
 	GameOverMenu {
@@ -168,5 +175,16 @@ Item {
 		backgroundColor: Material.background
 		onRetryButtonPressed: { Logic.restartGame() }
 		onQuitButtonPressed: { root.returnToMenu() }
+
+		onAfterDisappear: { countDown.activate() }
+	}
+
+	CountDownScreen {
+		id: countDown
+		width: parent.width
+		height: parent.height - headerHeight
+		y: table.y
+		backgroundColor: Material.foreground
+		onDone: { Logic.goGame() }
 	}
 }

@@ -5,6 +5,8 @@ import QtQuick.Window 2.15
 import QtMultimedia 5.15
 
 import "qrc:/js/main_logic.js" as Logic
+import "qrc:/qml/components"
+import "qrc:/qml/types"
 
 Window {
 	id: windowRoot
@@ -23,6 +25,7 @@ Window {
 		id: loader
 		anchors.fill: parent
 		active: false
+	//sourceComponent: singlePlayerClassic
 
 		function deactivate() { active = false }
 		function loadSingleplayerClassic() { sourceComponent = singlePlayerClassic; active = true }
@@ -38,12 +41,14 @@ Window {
 
 	MainMenu {
 			id: mainMenu
+		//state: "retracted"
 			width: parent.width
 			height: parent.height
 			backgroundColor: Material.primary
 			onQuitButtonPressed: { Logic.quitGame() }
 			onSingleplayerClassicPressed: { mainMenu.disappear(); loader.loadSingleplayerClassic() }
 
+			onAfterDisappear: { loader.item.start() }
 			onAfterAppear: { loader.deactivate() }
 	}
 }

@@ -14,6 +14,8 @@ Item {
 	signal restartButtonPressed()
 	signal quitButtonPressed()
 
+	signal afterDisappear()
+
 	Rectangle {
 		id: background
 		anchors.fill: parent
@@ -48,20 +50,24 @@ Item {
 		State {
 			name: "visible"
 			PropertyChanges { target: root; y: 0; visible: true; focus: true }
-		},
-		State {
-			name: "down"
-			PropertyChanges { target: root; y: height; visible: false; focus: false }
 		}
 	]
 
 	transitions: [
 		Transition {
-				from: "visible"; to: "retracted"; reversible: true
+				from: "visible"; to: "retracted"
 				SequentialAnimation {
-						NumberAnimation { properties: "y"; easing.type: Easing.InOutQuad; duration: 500 }
-						PropertyAnimation { properties: "visible, focus" }
+					ScriptAction { script: { root.afterDisappear() } }
+					NumberAnimation { properties: "y"; easing.type: Easing.InOutQuad; duration: 500 }
+					PropertyAnimation { properties: "visible, focus" }
 				}
+		},
+		Transition {
+			from: "retracted"; to: "visible"
+			SequentialAnimation {
+				PropertyAnimation { properties: "visible, focus" }
+				NumberAnimation { properties: "y"; easing.type: Easing.InOutQuad; duration: 500 }
+			}
 		}
 	]
 }

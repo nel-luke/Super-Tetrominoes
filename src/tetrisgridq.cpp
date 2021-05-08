@@ -247,6 +247,9 @@ int TetrisGridQ::moveShapeRight(unsigned int shape_id) {
 int TetrisGridQ::moveShapeDown(unsigned int shape_id) {
 	// Boundary given in x y coordinates
 	// matrix is y x
+	if (shape_id == 0)
+		return -1;
+
 	boundary shape_boundary = findBoundary(shape_id);
 
 	if (shape_boundary.by == getRows()-1)

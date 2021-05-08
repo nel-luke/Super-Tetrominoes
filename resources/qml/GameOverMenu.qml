@@ -13,6 +13,8 @@ Item {
 	signal retryButtonPressed()
 	signal quitButtonPressed()
 
+	signal afterDisappear()
+
 	Rectangle {
 		id: background
 		anchors.fill: parent
@@ -29,7 +31,7 @@ Item {
 		}
 
 		Button {
-			text: "Quit"
+			text: "Quit to Menu"
 			onClicked: quitButtonPressed()
 		}
 	}
@@ -44,12 +46,21 @@ Item {
 				PropertyChanges { target: root; y: 0; visible: true; focus: true }
 			} ]
 
-	transitions:
+	transitions: [
 		Transition {
-				from: "visible"; to: "retracted"; reversible: true
+				from: "visible"; to: "retracted"
 				SequentialAnimation {
+						ScriptAction { script: { root.afterDisappear() } }
 						NumberAnimation { properties: "y"; easing.type: Easing.InOutQuad; duration: 500 }
 						PropertyAnimation { properties: "visible, focus" }
 				}
+		},
+		Transition {
+			from: "retracted"; to: "visible"
+			SequentialAnimation {
+				PropertyAnimation { properties: "visible, focus" }
+				NumberAnimation { properties: "y"; easing.type: Easing.InOutQuad; duration: 500 }
+			}
 		}
+	]
 }
