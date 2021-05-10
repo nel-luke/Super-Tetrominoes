@@ -13,7 +13,7 @@ Item {
 	function appearNow() { root.state = ""; root.appear() }
 
 	signal quitButtonPressed()
-	signal singleplayerClassicPressed()
+	signal singleplayerEasyPressed()
 
 	signal afterDisappear()
 	signal afterAppear()
@@ -110,14 +110,14 @@ Item {
 		function disappear() { singleplayerTypes.visible = false }
 
 		Button {
-			text: "Classic"
+			text: "Easy"
 			Layout.fillHeight: true
 			Layout.fillWidth: true
-			onClicked: { root.singleplayerClassicPressed() }
+			onClicked: { root.singleplayerEasyPressed() }
 		}
 
 		Button {
-			text: "Extreme!"
+			text: "Normal"
 			Layout.fillHeight: true
 			Layout.fillWidth: true
 		}

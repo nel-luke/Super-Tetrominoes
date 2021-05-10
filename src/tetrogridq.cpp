@@ -1,7 +1,7 @@
-#include "../include/tetrisgridq.h"
+#include "../include/tetrogridq.h"
 #include "../include/c_shapes.h"
 
-TetrisGridQ::TetrisGridQ(QObject* parent) : QAbstractTableModel(parent), matrix(1), new_shape_id(1) {
+TetroGridQ::TetroGridQ(QObject* parent) : QAbstractTableModel(parent), matrix(1), new_shape_id(1) {
 	matrix[0].push_back({ 0, QColor(0, 0, 0), BorderNone });
 
 	for (int i = 0; i < numShapes; ++i) {
@@ -11,7 +11,7 @@ TetrisGridQ::TetrisGridQ(QObject* parent) : QAbstractTableModel(parent), matrix(
 	srand(time(NULL));
 }
 
-void TetrisGridQ::setRows(unsigned int count) {
+void TetroGridQ::setRows(unsigned int count) {
 		if (count > getRows()) {
 				insertRows(0, count - getRows());
 		} else if (count < getRows()) {
@@ -20,7 +20,7 @@ void TetrisGridQ::setRows(unsigned int count) {
 		emit rowsChanged();
 }
 
-void TetrisGridQ::setColumns(unsigned int count) {
+void TetroGridQ::setColumns(unsigned int count) {
 		if (count > getColumns()) {
 				insertColumns(0, count - getColumns());
 		} else if (count < getColumns()) {
@@ -30,15 +30,15 @@ void TetrisGridQ::setColumns(unsigned int count) {
 }
 
 // Inherited Read Methods
-int TetrisGridQ::rowCount(const QModelIndex& /*parent*/) const {
+int TetroGridQ::rowCount(const QModelIndex& /*parent*/) const {
 		return matrix.size();
 }
 
-int TetrisGridQ::columnCount(const QModelIndex& /*parent*/) const {
+int TetroGridQ::columnCount(const QModelIndex& /*parent*/) const {
 		return matrix.at(0).size();
 }
 
-auto TetrisGridQ::data(const QModelIndex& index, int role) const
+auto TetroGridQ::data(const QModelIndex& index, int role) const
 -> QVariant {
 		QVariant result;
 		switch (role) {
@@ -57,7 +57,7 @@ auto TetrisGridQ::data(const QModelIndex& index, int role) const
 		return result;
 }
 
-auto TetrisGridQ::headerData(int section, Qt::Orientation orientation, int role) const
+auto TetroGridQ::headerData(int section, Qt::Orientation orientation, int role) const
 -> QVariant {
 		if (orientation == Qt::Horizontal)
 				return QVariant();
@@ -71,7 +71,7 @@ auto TetrisGridQ::headerData(int section, Qt::Orientation orientation, int role)
 		return result;
 }
 
-auto TetrisGridQ::roleNames() const
+auto TetroGridQ::roleNames() const
 -> QHash<int, QByteArray> {
 		QHash<int, QByteArray> roles;
 		roles[blockColor] = "blockColor";
@@ -84,11 +84,11 @@ auto TetrisGridQ::roleNames() const
 
 
 // Inherited Write Methods
-bool TetrisGridQ::setData(const QModelIndex&, const QVariant&, int) {
+bool TetroGridQ::setData(const QModelIndex&, const QVariant&, int) {
 		return false;
 }
 
-auto TetrisGridQ::flags(const QModelIndex& /*index*/) const
+auto TetroGridQ::flags(const QModelIndex& /*index*/) const
 -> Qt::ItemFlags {
 		return Qt::ItemIsSelectable | Qt::ItemNeverHasChildren
 						| Qt::ItemIsEnabled;
@@ -96,7 +96,7 @@ auto TetrisGridQ::flags(const QModelIndex& /*index*/) const
 
 
 // Inherited Resize Methods
-bool TetrisGridQ::insertRows(int before_row, int count, const QModelIndex& parent) {
+bool TetroGridQ::insertRows(int before_row, int count, const QModelIndex& parent) {
 		beginInsertRows(parent, before_row + 1, before_row + count);
 		matrix.insert(matrix.begin() + before_row, count,
 									std::vector<block>(getColumns(), {0, QColor(0, 0, 0), BorderNone }));
@@ -104,14 +104,14 @@ bool TetrisGridQ::insertRows(int before_row, int count, const QModelIndex& paren
 		return true;
 }
 
-bool TetrisGridQ::removeRows(int from_row, int count, const QModelIndex &parent) {
+bool TetroGridQ::removeRows(int from_row, int count, const QModelIndex &parent) {
 		beginRemoveRows(parent, from_row, from_row + count - 1);
 		matrix.erase(matrix.begin() + from_row, matrix.begin() + from_row + count);
 		endRemoveRows();
 		return true;
 }
 
-bool TetrisGridQ::insertColumns(int before_column, int count, const QModelIndex& parent) {
+bool TetroGridQ::insertColumns(int before_column, int count, const QModelIndex& parent) {
 		beginInsertColumns(parent, before_column + 1, before_column + count);
 		for (auto& it : matrix) {
 				it.insert(it.begin() + before_column, count, { 0, QColor(0, 0, 0), BorderNone });
@@ -120,7 +120,7 @@ bool TetrisGridQ::insertColumns(int before_column, int count, const QModelIndex&
 		return true;
 }
 
-bool TetrisGridQ::removeColumns(int from_column, int count, const QModelIndex &parent) {
+bool TetroGridQ::removeColumns(int from_column, int count, const QModelIndex &parent) {
 		beginRemoveColumns(parent, from_column, from_column + count - 1);
 		for (auto& it : matrix) {
 				it.erase(it.begin() + from_column, it.begin() + from_column + count);
@@ -130,7 +130,7 @@ bool TetrisGridQ::removeColumns(int from_column, int count, const QModelIndex &p
 }
 
 // Slots
-int TetrisGridQ::spawn(unsigned int shape_type, QColor color, bool alt_spawn) {
+int TetroGridQ::spawn(unsigned int shape_type, QColor color, bool alt_spawn) {
 	shape_type = qMin(getNumShapes()-1, shape_type);
 	QGenericMatrix<4, 2, unsigned int> current_shape = shapes[shape_type];
 
@@ -174,7 +174,7 @@ int TetrisGridQ::spawn(unsigned int shape_type, QColor color, bool alt_spawn) {
 	}
 }
 
-int TetrisGridQ::moveShapeLeft(unsigned int shape_id) {
+int TetroGridQ::moveShapeLeft(unsigned int shape_id) {
 	// Boundary given in x y coordinates
 	// matrix is y x
 	boundary shape_boundary = findBoundary(shape_id);
@@ -206,7 +206,7 @@ int TetrisGridQ::moveShapeLeft(unsigned int shape_id) {
 	}
 }
 
-int TetrisGridQ::moveShapeRight(unsigned int shape_id) {
+int TetroGridQ::moveShapeRight(unsigned int shape_id) {
 	// Boundary given in x y coordinates
 	// matrix is y x
 	boundary shape_boundary = findBoundary(shape_id);
@@ -244,7 +244,7 @@ int TetrisGridQ::moveShapeRight(unsigned int shape_id) {
 	}
 }
 
-int TetrisGridQ::moveShapeDown(unsigned int shape_id) {
+int TetroGridQ::moveShapeDown(unsigned int shape_id) {
 	// Boundary given in x y coordinates
 	// matrix is y x
 	if (shape_id == 0)
@@ -285,7 +285,7 @@ int TetrisGridQ::moveShapeDown(unsigned int shape_id) {
 	}
 }
 
-int TetrisGridQ::moveShapeUp(unsigned int shape_id) {
+int TetroGridQ::moveShapeUp(unsigned int shape_id) {
 	// Boundary given in x y coordinates
 	// matrix is y x
 	boundary shape_boundary = findBoundary(shape_id);
@@ -317,15 +317,15 @@ int TetrisGridQ::moveShapeUp(unsigned int shape_id) {
 	}
 }
 
-bool TetrisGridQ::rotateShape(unsigned int shape_id) {
+bool TetroGridQ::rotateShape(unsigned int shape_id) {
 	return rotateShapeHelper(shape_id, false);
 }
 
-bool TetrisGridQ::c_rotateShape(unsigned int shape_id) {
+bool TetroGridQ::c_rotateShape(unsigned int shape_id) {
 	return rotateShapeHelper(shape_id, true);
 }
 
-void TetrisGridQ::reset() {
+void TetroGridQ::reset() {
 	for (auto& row : matrix) {
 			for (auto& col : row) {
 					col = { 0, QColor(0, 0, 0), BorderNone };
@@ -336,7 +336,7 @@ void TetrisGridQ::reset() {
 }
 
 // Private Methods
-std::vector<int> TetrisGridQ::checkRows() {
+std::vector<int> TetroGridQ::checkRows() {
 	std::vector<int> rows;
 	for (unsigned int i = 0 ; i < getRows(); ++i) {
 		bool check = true;
@@ -349,7 +349,7 @@ std::vector<int> TetrisGridQ::checkRows() {
 	return rows;
 }
 
-void TetrisGridQ::deleteRow(unsigned int index) {
+void TetroGridQ::deleteRow(unsigned int index) {
 	std::vector<unsigned int> modified_shapes;
 
 	for (unsigned int i = 0; i < getColumns(); ++i) {
@@ -381,7 +381,7 @@ void TetrisGridQ::deleteRow(unsigned int index) {
 	emit dataChanged(createIndex(index,0), createIndex(qMin(index+1, getRows()),getColumns()), {});
 }
 
-TetrisGridQ::boundary TetrisGridQ::findBoundary(unsigned int shape_id) const {
+TetroGridQ::boundary TetroGridQ::findBoundary(unsigned int shape_id) const {
 	boundary t = {99, 99, 0, 0};
 	for (unsigned int i = 0; i < getRows(); ++i) {
 		for (unsigned int j = 0; j < getColumns(); ++j) {
@@ -398,7 +398,7 @@ TetrisGridQ::boundary TetrisGridQ::findBoundary(unsigned int shape_id) const {
 	return t;
 }
 
-BoolMatrix TetrisGridQ::findShape(unsigned int shape_id, const boundary& b, bool negate) const {
+BoolMatrix TetroGridQ::findShape(unsigned int shape_id, const boundary& b, bool negate) const {
 	unsigned int rows = b.by - b.ay + 1;
 	unsigned int columns = b.bx - b.ax + 1;
 	BoolMatrix shape(rows, std::vector<bool>(columns, 0));
@@ -414,7 +414,7 @@ BoolMatrix TetrisGridQ::findShape(unsigned int shape_id, const boundary& b, bool
 	return shape;
 }
 
-BoolMatrix TetrisGridQ::rotateMatrix(const BoolMatrix& A, bool counter) const {
+BoolMatrix TetroGridQ::rotateMatrix(const BoolMatrix& A, bool counter) const {
 	BoolMatrix result(A[0].size(), std::vector<bool>(A.size(), 0));
 
 	if (!counter) {
@@ -436,7 +436,7 @@ BoolMatrix TetrisGridQ::rotateMatrix(const BoolMatrix& A, bool counter) const {
 	return result;
 }
 
-bool TetrisGridQ::dotMatrix(const BoolMatrix& A, const BoolMatrix& B) const {
+bool TetroGridQ::dotMatrix(const BoolMatrix& A, const BoolMatrix& B) const {
 	if (A.size() != B.size() || A[0].size() != B[0].size())
 		return false;
 
@@ -450,7 +450,7 @@ bool TetrisGridQ::dotMatrix(const BoolMatrix& A, const BoolMatrix& B) const {
 	return result;
 }
 
-bool TetrisGridQ::rotateShapeHelper(unsigned int shape_id, bool counter) {
+bool TetroGridQ::rotateShapeHelper(unsigned int shape_id, bool counter) {
 	boundary shape_boundary = findBoundary(shape_id);
 
 	BoolMatrix shape = findShape(shape_id, shape_boundary);

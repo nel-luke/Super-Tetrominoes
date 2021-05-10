@@ -1,5 +1,5 @@
-#ifndef TETRISGRIDQ_H
-#define TETRISGRIDQ_H
+#ifndef TETROGRIDQ_H
+#define TETROGRIDQ_H
 
 #include <QAbstractTableModel>
 #include <QColor>
@@ -14,7 +14,7 @@
 
 typedef std::vector<std::vector<bool>> BoolMatrix;
 
-class TetrisGridQ : public QAbstractTableModel
+class TetroGridQ : public QAbstractTableModel
 {
 	Q_OBJECT
 	QML_ELEMENT
@@ -65,7 +65,7 @@ public:
 	};
 
 	// Constructors
-	explicit TetrisGridQ(QObject* parent = nullptr);
+	explicit TetroGridQ(QObject* parent = nullptr);
 
 	// Getter Methods
 	inline unsigned int getRows() const { return matrix.size(); }
@@ -105,7 +105,7 @@ public:
 			auto removeColumns(int from_column, int count, const QModelIndex& parent = QModelIndex())
 					-> bool override;
 
-			~TetrisGridQ() {};
+			~TetroGridQ() {};
 
 public slots:
 		int spawn(unsigned int shape_type, QColor color, bool alt_spawn = false);
@@ -125,4 +125,4 @@ signals:
 		void shape1Changed();
 };
 
-#endif // TETRISGRIDQ_H
+#endif // TETROGRIDQ_H

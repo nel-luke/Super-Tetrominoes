@@ -3,8 +3,7 @@
         <file>main.qml</file>
     </qresource>
     <qresource prefix="/qml/components">
-        <file>SinglePlayerClassic.qml</file>
-        <file>SinglePlayerExtreme.qml</file>
+        <file>Singleplayer.qml</file>
     </qresource>
     <qresource prefix="/qml/types">
         <file>VanishBar.qml</file>

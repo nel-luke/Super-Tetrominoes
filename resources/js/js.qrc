@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/js">
-        <file>single_classic_logic.js</file>
+        <file>singleplayer_logic.js</file>
         <file>main_logic.js</file>
-        <file>single_extreme_logic.js</file>
     </qresource>
 </RCC>

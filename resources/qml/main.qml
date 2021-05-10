@@ -13,7 +13,7 @@ Window {
 	visible: true
 	width: 720
 	height: 770
-	title: qsTr("Tetris")
+	title: qsTr("Super Tetrominoes")
 
 	readonly property var shape_colors:
 			[Material.Red, Material.Purple, Material.Blue, Material.Green,
@@ -25,15 +25,14 @@ Window {
 		id: loader
 		anchors.fill: parent
 		active: false
-	//sourceComponent: singlePlayerClassic
 
 		function deactivate() { active = false }
-		function loadSingleplayerClassic() { sourceComponent = singlePlayerClassic; active = true }
+		function loadSingleplayerEasy() { sourceComponent = singleplayer; active = true }
 	}
 
 	Component {
-		id: singlePlayerClassic
-		SinglePlayerClassic {
+		id: singleplayer
+		Singleplayer {
 			shape_colors: windowRoot.shape_colors
 			onReturnToMenu: { windowRoot.returnToMenu() }
 		}
@@ -41,12 +40,11 @@ Window {
 
 	MainMenu {
 			id: mainMenu
-		//state: "retracted"
 			width: parent.width
 			height: parent.height
 			backgroundColor: Material.primary
 			onQuitButtonPressed: { Logic.quitGame() }
-			onSingleplayerClassicPressed: { mainMenu.disappear(); loader.loadSingleplayerClassic() }
+			onSingleplayerEasyPressed: { mainMenu.disappear(); loader.loadSingleplayerEasy() }
 
 			onAfterDisappear: { loader.item.start() }
 			onAfterAppear: { loader.deactivate() }

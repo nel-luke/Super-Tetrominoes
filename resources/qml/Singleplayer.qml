@@ -3,7 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.15
 
 import Custom 1.0
-import "qrc:/js/single_classic_logic.js" as Logic
+import "qrc:/js/singleplayer_logic.js" as Logic
 import "qrc:/qml/types"
 
 Item {
@@ -31,7 +31,7 @@ Item {
 		return Material.color(color_id)
 	}
 
-	TetrisGridQ {
+	TetroGridQ {
 		id: data; rows: root.gridRows; columns: root.gridColumns;
 	}
 
