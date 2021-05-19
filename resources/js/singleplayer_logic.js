@@ -44,7 +44,13 @@ function spawnPlayer1() {
 	player1_color_history.shift()
 	player1_color_history.push(shape_color)
 
-	player1 = data.spawn(shape_type, getColor(shape_colors[shape_color]))
+	var special_type = 0
+	if (root.player1_spawn_special.length !== 0) {
+		special_type = root.player1_spawn_special[0]
+		root.player1_spawn_special.shift()
+	}
+
+	player1 = data.spawn(shape_type, getColor(shape_colors[shape_color]), special_type)
 	if (player1 === -1) {
 		gameOverMenu.appear()
 		resetGame()
@@ -55,8 +61,7 @@ function spawnPlayer1() {
 function servicePlayer1() {
 	var player1_y = data.moveShapeDown(player1)
 	if (player1_y === -1) {
-		player1_y = 0
-		vanish_rows = vanish_rows.concat(data.checkRows())
+		root.vanish_rows = root.vanish_rows.concat(data.checkRows())
 		setVanishBar()
 		spawnPlayer1()
 	}
@@ -80,6 +85,8 @@ function deleteRow() {
 	vanish_rows.shift()
 	vanishBar.disappear()
 	score++
+	scoreText.activate()
+
 	reduceTime()
 	setVanishBar()
 }
@@ -87,4 +94,44 @@ function deleteRow() {
 function dropShape(shape_id) {
 	while (data.moveShapeDown(shape_id) !== -1)
 		;
+}
+
+function serviceSpecial(special_type) {
+	root.player1_activate_special.push(special_type)
+	if (root.player1_activate_special.length === 1)
+		specialTimer.start()
+}
+
+function activateSpecial() {
+	var special = root.player1_activate_special[0]
+	effectScreen.activate(data.getSingle(special))
+
+	switch (special) {
+	case TetroGridQ.CancelEffect : activateCancelEffects()
+		break;
+	case TetroGridQ.NoDrop : activateNoDrop()
+		break;
+	}
+
+	root.player1_activate_special.shift()
+	if (root.player1_activate_special.length !== 0)
+		specialTimer.start()
+}
+
+function buyEffect() {
+	if (root.score === 0)
+		return
+
+	root.player1_spawn_special.push(TetroGridQ.NoDrop)
+	score--
+	scoreText.activate()
+}
+
+function activateCancelEffects() {
+	root.player1_drop_locked = false
+}
+
+function activateNoDrop() {
+	root.player1_drop_locked = true
+	root.player1_spawn_special.unshift(TetroGridQ.CancelEffect)
 }

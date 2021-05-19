@@ -11,6 +11,9 @@
         <file>PauseMenu.qml</file>
         <file>GameOverMenu.qml</file>
         <file>CountDownScreen.qml</file>
+        <file>TetroBlock.qml</file>
+        <file>EffectScreen.qml</file>
+        <file>SwellingLabel.qml</file>
     </qresource>
     <qresource prefix="/">
         <file>qtquickcontrols2.conf</file>

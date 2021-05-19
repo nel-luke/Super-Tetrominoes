@@ -14,6 +14,7 @@ Item {
 
 	signal quitButtonPressed()
 	signal singleplayerEasyPressed()
+	signal multiPressed()
 
 	signal afterDisappear()
 	signal afterAppear()
@@ -51,7 +52,8 @@ Item {
 			text: "Multiplayer"
 			Layout.fillHeight: true
 			Layout.fillWidth: true
-			onClicked: { mainButtons.moveAside(); multiplayerTypes.appear() }
+			//onClicked: { mainButtons.moveAside(); multiplayerTypes.appear() }
+			onClicked: { root.multiPressed() }
 		}
 
 		Button {

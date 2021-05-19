@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/textures/" >
+        <file>cancel_effect.png</file>
+        <file>no_drop.png</file>
+        <file>no_rotate.png</file>
+    </qresource>
+</RCC>

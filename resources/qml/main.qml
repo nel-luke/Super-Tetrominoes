@@ -11,8 +11,9 @@ import "qrc:/qml/types"
 Window {
 	id: windowRoot
 	visible: true
-	width: 720
-	height: 770
+	width: 1920
+	height: 1000
+	visibility: Qt.WindowMaximized
 	title: qsTr("Super Tetrominoes")
 
 	readonly property var shape_colors:
@@ -45,6 +46,7 @@ Window {
 			backgroundColor: Material.primary
 			onQuitButtonPressed: { Logic.quitGame() }
 			onSingleplayerEasyPressed: { mainMenu.disappear(); loader.loadSingleplayerEasy() }
+			onMultiPressed: { sweller.activate() }
 
 			onAfterDisappear: { loader.item.start() }
 			onAfterAppear: { loader.deactivate() }

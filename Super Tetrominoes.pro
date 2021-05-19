@@ -20,7 +20,12 @@ HEADERS = \
 SOURCES = src/main.cpp \
     src/tetrogridq.cpp
 
-RESOURCES = resources/qml/qml.qrc resources/js/js.qrc resources/sounds/sounds.qrc
+RESOURCES = \
+    resources/qml/qml.qrc \
+    resources/js/js.qrc \
+    resources/sounds/sounds.qrc \
+    resources/textures/textures.qrc \
+    resources/singles/singles.qrc
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_NAME = "Custom"

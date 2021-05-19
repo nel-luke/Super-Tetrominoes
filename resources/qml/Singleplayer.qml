@@ -20,8 +20,13 @@ Item {
 	required property var shape_colors
 
 	property int player1: 0
+
+	property bool player1_drop_locked: false
+
 	property var player1_shape_history: [0, 1, 2]
 	property var player1_color_history: [0, 1, 2]
+	property var player1_spawn_special: []
+	property var player1_activate_special: []
 
 	signal returnToMenu()
 
@@ -33,6 +38,7 @@ Item {
 
 	TetroGridQ {
 		id: data; rows: root.gridRows; columns: root.gridColumns;
+		onActivateSpecial: { Logic.serviceSpecial(special_type) }
 	}
 
 	onHeightChanged: { table.forceLayout() }
@@ -58,95 +64,108 @@ Item {
 		onTriggered: { data.reset() }
 	}
 
+	Timer {
+		id: specialTimer
+		interval: 50
+		onTriggered: { Logic.activateSpecial() }
+	}
+
 	Rectangle {
 		id: background
 		anchors.fill: parent
 		color: Material.background
 		Keys.onPressed: {
-			if (event.key === Qt.Key_Up || event.key === Qt.Key_W)
+			if (event.key === Qt.Key_Slash || event.key === Qt.Key_Q) {
+				Logic.buyEffect()
+			} else if (!root.player1_rotation_locked && (event.key === Qt.Key_Up || event.key === Qt.Key_W)) {
 				data.rotateShape(player1)
-			else if (event.key === Qt.Key_Down || event.key === Qt.Key_S)
+			} else if (!root.player1_drop_locked && (event.key === Qt.Key_Down || event.key === Qt.Key_S)) {
 				Logic.dropShape(player1)
-			else if (event.key === Qt.Key_Left || event.key === Qt.Key_A)
+			} else if (event.key === Qt.Key_Left || event.key === Qt.Key_A) {
 				data.moveShapeLeft(player1)
-			else if (event.key === Qt.Key_Right || event.key === Qt.Key_D)
+			} else if (event.key === Qt.Key_Right || event.key === Qt.Key_D) {
 				data.moveShapeRight(player1)
+			}
 		}
 	}
 
 	Column {
 		anchors.fill: parent
 
-		Rectangle {
-			id: header
-			height: headerHeight
+		Row {
 			width: parent.width
+			height: headerHeight
 
-			Row {
-				anchors.fill: parent
-				Rectangle {
-					height: parent.height
-					width: parent.width/2
-					color: Material.background
+			Rectangle {
+				width: parent.width/3
+				height: parent.height
+				color: Material.background
 
-					Label {
-						anchors.centerIn: parent
-						font.bold: true
-						font.pointSize: 16
-						color: "white"
-						text: "Score: " + score
-					}
+				Label {
+					id: scoreLabel
+					anchors.centerIn: parent
+					font.bold: true
+					font.pointSize: 16
+					color: "white"
+					text: "Score:"
 				}
-				Rectangle {
-					height: parent.height
-					width: parent.width/2
-					color: Material.background
 
-					Button {
-						id: pauseButton
-						enabled: false
-						anchors.centerIn: parent
-						text: "Pause"
-						onClicked: { Logic.pauseGame() }
-					}
+				SwellingLabel {
+					id: scoreText
+					anchors.left: scoreLabel.right
+					anchors.verticalCenter: scoreLabel.verticalCenter
+					font.bold: true
+					fontSize: 16
+					color: "white"
+					text: score
+				}
+			}
+
+			Rectangle {
+				height: parent.height
+				width: parent.width/3
+				color: Material.background
+
+				Image {
+					id: specialSelector
+					anchors.centerIn: parent
+					height: parent.height
+					width: height
+
+					source: data.getSingle(TetroGridQ.NoDrop)
+				}
+			}
+
+			Rectangle {
+				height: parent.height
+				width: parent.width/3
+				color: Material.background
+
+				Button {
+					id: pauseButton
+					enabled: false
+					anchors.centerIn: parent
+					text: "Pause"
+					onClicked: { Logic.pauseGame() }
 				}
 			}
 		}
 
 		TableView {
 			id: table
-			height: parent.height - headerHeight
-			width: parent.width
+			height: Math.min(parent.height/2, parent.width)
+			width: height
 			reuseItems: false
 
-			rowHeightProvider: function() { return table.height/data.rows}// - 0.05*data.rows}
-			columnWidthProvider: function() { return table.width/data.columns}// - 0.05*data.columns}
+			rowHeightProvider: function() { return Math.min(table.height/data.rows, table.width/data.columns)}
+			columnWidthProvider: function() { return Math.min(table.height/data.rows, table.width/data.columns)}
 
 			rowSpacing: 0
 			columnSpacing: 0
 
 			model: data
 
-			delegate:
-					Rectangle {
-						id: blockBorder
-						color: "black"
-						readonly property int borderSize: 1
-						property variant gridColors: [
-							Material.color(Material.Grey, Material.Shade300),
-							Material.color(Material.Grey, Material.Shade400)]
-
-						Rectangle {
-							id: blockFront
-							height: parent.height - borderSize * (hasBorderTop + hasBorderBottom)
-							width: parent.width - borderSize * (hasBorderLeft + hasBorderRight)
-							color: blockColor != "#000000" ? blockColor : gridColors[((row%2)+(column%2))%2]
-							x: borderSize * hasBorderLeft
-							y: borderSize * hasBorderTop
-
-						}
-
-			}
+			delegate: TetroBlock {}
 		}
 	}
 
@@ -186,5 +205,12 @@ Item {
 		y: table.y
 		backgroundColor: Material.foreground
 		onDone: { Logic.goGame() }
+	}
+
+	EffectScreen {
+		id: effectScreen
+		width: table.width
+		height: table.height
+		backgroundColor: Material.foreground
 	}
 }
