@@ -3,7 +3,10 @@ import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.15
 
 import Custom 1.0
-import "qrc:/js/singleplayer_logic.js" as Logic
+import "qrc:/js/control_logic.js" as Control
+import "qrc:/js/effects_logic.js" as Effects
+import "qrc:/js/service_logic.js" as Service
+import "qrc:/js/state_logic.js" as State
 import "qrc:/qml/types"
 
 Item {
@@ -12,11 +15,12 @@ Item {
 	readonly property int headerHeight: 50
 	readonly property int difficulty: 20
 	readonly property int timerInt: 500
+	readonly property int startPoints: 10
 
 	property int gridRows: 20
 	property int gridColumns: 16
 	property double block_size: Math.min(root.width/root.gridColumns, (root.height-root.headerHeight)/root.gridRows)
-	property int points: 10
+	property int points: startPoints
 
 	property var shape_colors: [
 		Material.Red, Material.Purple, Material.Blue, Material.Green,
@@ -28,6 +32,7 @@ Item {
 	property bool debug: false
 	onDebugChanged: { playerTimer.running = !root.debug }
 
+	property bool game_started: false
 	property bool effects_active: false
 	property bool repeat_shape: false
 	property bool mix_controls: false
@@ -42,25 +47,30 @@ Item {
 	property var controls_order: [0, 1, 2, 3]
 
 	signal setFocus()
+	signal enablePauseButton()
+	signal disablePauseButton()
+	signal gameRetry()
+	signal returnToMenu()
+
 	signal getPoints(var num_points)
 	signal sendSpecial(var special_type)
 	signal returnSpecial(var special_type)
-	signal gamePaused()
-	signal gameResumed()
 	signal gameFailed()
 
-	function getSpecial(special_type) { Logic.serviceSpecial(special_type) }
-	function getReturnedSpecial(special_type) { Logic.serviceReturnedSpecial(special_type) }
-	function startGame() { countDown.activate() }
-	function removePoints(num_points) { Logic.removePoints(num_points) }
-	function pauseGame() { Logic.pauseGame() }
-	function resumeGame() { Logic.resumeGame() }
-	function winGame() { Logic.winGame() }
+	function getSpecial(special_type) { Service.serviceSpecial(special_type) }
+	function getReturnedSpecial(special_type) { Service.serviceReturnedSpecial(special_type) }
 
-	function keyUp() { Logic.keyUp() }
-	function keyDown() { Logic.keyDown() }
-	function keyLeft() { Logic.keyLeft() }
-	function keyRight() { Logic.keyRight() }
+	function startGame() { State.prepareGame(); countDown.activate() }
+	function removePoints(num_points) { State.removePoints(num_points) }
+	function pauseGame() { State.pauseGame() }
+	function resumeGame() { State.resumeGame() }
+	function restartGame() { State.restartGame() }
+	function winGame() { State.winGame() }
+
+	function keyUp() { Control.keyUp() }
+	function keyDown() { Control.keyDown() }
+	function keyLeft() { Control.keyLeft() }
+	function keyRight() { Control.keyRight() }
 
 	function getColor(color_id) {
 		return Material.color(color_id)
@@ -74,77 +84,46 @@ Item {
 		id: playerTimer
 		interval: timerInt
 		repeat: true
-		onTriggered: { Logic.servicePlayer() }
+		onTriggered: { Service.servicePlayer() }
 	}
 
 	Timer {
 		id: vanishTimer
 		interval: 500
-		onTriggered: { Logic.deleteRow() }
+		onTriggered: { Service.deleteRow() }
 	}
 
 	Timer {
 		id: resetTimer
 		interval: 1000
-		onTriggered: { data.reset(); root.points = 10 }
-	}
-
-	Timer {
-		id: specialTimer
-		interval: 50
-		onTriggered: { Logic.activateSpecial() }
+		onTriggered: { data.reset(); root.points = root.startPoints }
 	}
 
 	Column {
 		anchors.fill: parent
 
-		Row {
+		Rectangle {
 			width: parent.width
-			height: headerHeight
+			height: root.headerHeight
+			color: Material.background
 
-			Rectangle {
-				width: parent.width/3
-				height: parent.height
-				color: Material.background
-
-				Label {
-					id: scoreLabel
-					anchors.centerIn: parent
-					font.bold: true
-					font.pointSize: 16
-					color: "white"
-					text: "Points:"
-				}
-
-				SwellingLabel {
-					id: scoreText
-					anchors.left: scoreLabel.right
-					anchors.verticalCenter: scoreLabel.verticalCenter
-					font.bold: true
-					fontSize: 16
-					color: "white"
-					text: root.points
-				}
+			Label {
+				id: scoreLabel
+				anchors.centerIn: parent
+				font.bold: true
+				font.pointSize: 16
+				color: "white"
+				text: "Points: "
 			}
 
-			Rectangle {
-				height: parent.height
-				width: parent.width/3
-				color: Material.background
-			}
-
-			Rectangle {
-				height: parent.height
-				width: parent.width/3
-				color: Material.background
-
-				Button {
-					id: pauseButton
-					enabled: false
-					anchors.centerIn: parent
-					text: "Pause"
-					onClicked: { root.gamePaused(); Logic.pauseGame() }
-				}
+			SwellingLabel {
+				id: scoreText
+				anchors.left: scoreLabel.right
+				anchors.verticalCenter: scoreLabel.verticalCenter
+				font.bold: true
+				fontSize: 16
+				color: "white"
+				text: root.points
 			}
 		}
 
@@ -174,7 +153,7 @@ Item {
 				id: countDown
 				anchors.fill: parent
 				backgroundColor: Material.foreground
-				onDone: { Logic.goGame() }
+				onDone: { State.goGame() }
 			}
 
 			EffectScreen {
@@ -191,24 +170,12 @@ Item {
 		}
 	}
 
-	PauseMenu {
-		id: pauseMenu
-		width: parent.width
-		height: parent.height
-		backgroundColor: Material.background
-		onResumeButtonPressed: { 	root.gameResumed(); Logic.resumeGame() }
-		onRestartButtonPressed: { root.gameRestarted(); Logic.restartGame() }
-		onQuitButtonPressed: { root.returnToMenu() }
-
-		onAfterDisappear: { countDown.activate() }
-	}
-
 	GameOverMenu {
 		id: gameOverMenu
 		width: parent.width
 		height: parent.height
 		backgroundColor: Material.background
-		onRetryButtonPressed: { Logic.restartGame() }
+		onRetryButtonPressed: { root.gameRetry(); State.restartGame() }
 		onQuitButtonPressed: { root.returnToMenu() }
 
 		onAfterDisappear: { countDown.activate() }

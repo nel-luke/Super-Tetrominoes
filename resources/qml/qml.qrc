@@ -3,7 +3,7 @@
         <file>main.qml</file>
     </qresource>
     <qresource prefix="/qml/components">
-        <file>Singleplayer.qml</file>
+        <file>LocalMultiplayer.qml</file>
     </qresource>
     <qresource prefix="/qml/types">
         <file>VanishBar.qml</file>

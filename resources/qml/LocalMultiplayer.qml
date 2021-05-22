@@ -7,7 +7,7 @@ import "qrc:/qml/types"
 Item {
 	id: root
 
-	required property var shape_colors
+	property int header_height: 50
 
 	signal returnToMenu()
 
@@ -51,31 +51,68 @@ Item {
 
 			PlayArea {
 				id: player1
-				width: parent.width/2
+				width: 7*parent.width/16
 				height: parent.height
-				shape_colors: root.shape_colors
 				onSetFocus: { background.focus = true }
+				onGameRetry: { pauseButton.visible = true; player2.restartGame() }
+				onReturnToMenu: { root.returnToMenu() }
+				onEnablePauseButton: { pauseButton.enabled = true }
+				onDisablePauseButton: { pauseButton.enabled = false }
+
 				onGetPoints: { player2.removePoints(num_points) }
 				onSendSpecial: { player2.getSpecial(special_type) }
 				onReturnSpecial: { player2.getReturnedSpecial(special_type) }
-				onGamePaused: player2.pauseGame()
-				onGameResumed: player2.resumeGame()
-				onGameFailed: player2.winGame()
+				onGameFailed: { pauseButton.visible = false; player2.winGame() }
+			}
+
+			Rectangle {
+				width: parent.width/8
+				height: parent.height
+				color: Material.background
+
+				Rectangle {
+					width: parent.width
+					height: root.header_height
+					color: Material.background
+
+					Button {
+						id: pauseButton
+						enabled: false
+						anchors.centerIn: parent
+						text: "Pause"
+						onClicked: {
+							player1.pauseGame()
+							player2.pauseGame()
+							pauseMenu.appear()
+						}
+					}
+				}
 			}
 
 			PlayArea {
 				id: player2
-				width: parent.width/2
+				width: 7*parent.width/16
 				height: parent.height
 			debug: true
-				shape_colors: root.shape_colors
-				onSetFocus: { background.focus = true }
+				//onSetFocus: { background.focus = true }
+				onGameRetry: { player1.restartGame() }
+				onReturnToMenu: { pauseButton.visible = true; root.returnToMenu() }
 				onGetPoints: { player1.removePoints(num_points) }
 				onSendSpecial: { player1.getSpecial(special_type) }
 				onReturnSpecial: { player1.getReturnedSpecial(special_type) }
-				onGamePaused: player1.pauseGame()
-				onGameResumed: player1.resumeGame()
-				onGameFailed: player1.winGame()
+				onGameFailed: { pauseButton.visible = false; player1.winGame() }
 			}
+	}
+
+	PauseMenu {
+		id: pauseMenu
+		width: parent.width
+		height: parent.height
+		backgroundColor: Material.background
+		onResumeButtonPressed: { pauseMenu.disappear() }
+		onRestartButtonPressed: { player1.restartGame(); player2.restartGame(); pauseMenu.disappear() }
+		onQuitButtonPressed: { root.returnToMenu() }
+
+		onAfterDisappear: { player1.resumeGame(); player2.resumeGame() }
 	}
 }
