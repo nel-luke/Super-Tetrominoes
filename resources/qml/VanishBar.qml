@@ -4,12 +4,11 @@ Rectangle {
 	id: root
 	color: "white"
 	state: "off-screen"
-	x: 0
-	y: 0
 
 	function disappear() { root.state = "off-screen" }
 	function appear() { root.state = "on-screen" }
 	function setY(new_y) { root.y = new_y }
+	function setHeight(new_height) { root.height = new_height }
 
 	states:
 		[ State {

@@ -24,8 +24,7 @@ RESOURCES = \
     resources/qml/qml.qrc \
     resources/js/js.qrc \
     resources/sounds/sounds.qrc \
-    resources/textures/textures.qrc \
-    resources/singles/singles.qrc
+    resources/textures/textures.qrc
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_NAME = "Custom"

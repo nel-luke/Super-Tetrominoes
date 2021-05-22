@@ -19,12 +19,5 @@ Item {
 		color: blockColor != "#000000" ? blockColor : gridColors[((row%2)+(column%2))%2]
 		x: borderSize * hasBorderLeft
 		y: borderSize * hasBorderTop
-
-		Image {
-			visible: blockColor != "#000000" ? true : false
-			anchors.fill: parent
-			opacity: 0.4
-			source: blockTexture
-		}
 	}
 }

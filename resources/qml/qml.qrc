@@ -14,6 +14,7 @@
         <file>TetroBlock.qml</file>
         <file>EffectScreen.qml</file>
         <file>SwellingLabel.qml</file>
+        <file>PlayArea.qml</file>
     </qresource>
     <qresource prefix="/">
         <file>qtquickcontrols2.conf</file>

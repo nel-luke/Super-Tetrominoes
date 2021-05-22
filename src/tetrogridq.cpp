@@ -2,15 +2,9 @@
 #include "../include/c_shapes.h"
 
 const std::unordered_map<TetroGridQ::SpecialType, QString> TetroGridQ::textures {
-	{ NormalBlock, "" },
-	{ CancelEffect, "qrc:/textures/cancel_effect.png" },
-	{ NoDrop, "qrc:/textures/no_drop.png" }
-};
-
-const std::unordered_map<TetroGridQ::SpecialType, QString> TetroGridQ::singles {
-	{ NormalBlock, "" },
-	{ CancelEffect, "qrc:/singles/cancel_effect.png" },
-	{ NoDrop, "qrc:/singles/no_drop.png" }
+	{ RepeatShape, "qrc:/textures/repeat_shape.png" },
+	{ MixControls, "qrc:/textures/mix_controls.png" },
+	{ NoDrop, "qrc:/textures/no_drop.png" },
 };
 
 TetroGridQ::TetroGridQ(QObject* parent) : QAbstractTableModel(parent), matrix(1), new_shape_id(1) {
@@ -56,8 +50,6 @@ auto TetroGridQ::data(const QModelIndex& index, int role) const
 		switch (role) {
 			case  blockColor: result = QVariant::fromValue(matrix.at(index.row()).at(index.column()).color);
 					break;
-			case blockTexture: result = QVariant::fromValue(textures.at(matrix.at(index.row()).at(index.column()).type));
-					break;
 			case hasBorderLeft : result = QVariant::fromValue(matrix.at(index.row()).at(index.column()).borders & BorderLeft ? 1 : 0);
 					break;
 			case hasBorderRight : result = QVariant::fromValue(matrix.at(index.row()).at(index.column()).borders & BorderRight ? 1 : 0);
@@ -89,7 +81,6 @@ auto TetroGridQ::roleNames() const
 -> QHash<int, QByteArray> {
 		QHash<int, QByteArray> roles;
 		roles[blockColor] = "blockColor";
-		roles[blockTexture] = "blockTexture";
 		roles[hasBorderLeft] = "hasBorderLeft";
 		roles[hasBorderRight] = "hasBorderRight";
 		roles[hasBorderTop] = "hasBorderTop";
@@ -129,7 +120,7 @@ bool TetroGridQ::removeRows(int from_row, int count, const QModelIndex &parent) 
 bool TetroGridQ::insertColumns(int before_column, int count, const QModelIndex& parent) {
 		beginInsertColumns(parent, before_column + 1, before_column + count);
 		for (auto& it : matrix) {
-				it.insert(it.begin() + before_column, count, { 0, QColor(0, 0, 0), NormalBlock, BorderNone });
+				it.insert(it.begin() + before_column, count, { 0, QColor(0, 0, 0), BorderNone });
 		}
 		endInsertColumns();
 		return true;
@@ -145,21 +136,13 @@ bool TetroGridQ::removeColumns(int from_column, int count, const QModelIndex &pa
 }
 
 // Slots
-int TetroGridQ::spawn(unsigned int shape_type, QColor color, SpecialType special_type, bool alt_spawn) {
+int TetroGridQ::spawnShape(unsigned int shape_type, QColor color) {
 	shape_type = qMin(getNumShapes()-1, shape_type);
 	QGenericMatrix<4, 2, unsigned int> current_shape = shapes[shape_type];
 
 	unsigned int point = 0;
-	if (alt_spawn == false) {
-		point = (unsigned int)floor(getColumns()/2);
-	} else {
-		unsigned int min_x = floor(getColumns()/2)-3;
-		unsigned int max_x = floor(getColumns()/2)+3;
+	point = (unsigned int)floor(getColumns()/2);
 
-		do
-			point = rand() % getColumns();
-		while (point > min_x && point < max_x);
-	}
 	boundary spawn_point = { point-2, 0, point+1, 1 };
 
 	BoolMatrix shape(2, std::vector<bool>(4, 0));
@@ -177,7 +160,7 @@ int TetroGridQ::spawn(unsigned int shape_type, QColor color, SpecialType special
 		for (int i = 0; i < 2; ++i) {
 			for (int j = 0; j < 4; ++j) {
 				if (current_shape(i, j)) {
-					matrix.at(spawn_point.ay + i).at(spawn_point.ax + j) = { shape_id, color, special_type, current_shape(i, j) };
+					matrix.at(spawn_point.ay + i).at(spawn_point.ax + j) = { shape_id, color, current_shape(i, j) };
 				}
 			}
 		}
@@ -190,13 +173,17 @@ int TetroGridQ::spawn(unsigned int shape_type, QColor color, SpecialType special
 	}
 }
 
-int TetroGridQ::moveShapeLeft(unsigned int shape_id) {
+bool TetroGridQ::moveShapeLeft(unsigned int shape_id) {
 	// Boundary given in x y coordinates
 	// matrix is y x
+
+	if (shape_id == 0)
+		return false;
+
 	boundary shape_boundary = findBoundary(shape_id);
 
 	if (shape_boundary.ax == 0)
-		return -1;
+		return false;
 
 	BoolMatrix shape = findShape(shape_id, shape_boundary);
 
@@ -210,25 +197,29 @@ int TetroGridQ::moveShapeLeft(unsigned int shape_id) {
 			for (unsigned int j = shape_boundary.ax; j <= shape_boundary.bx; ++j) {
 				if (matrix.at(i).at(j).id == shape_id) {
 					matrix.at(i).at(j-1) = matrix.at(i).at(j);
-					matrix.at(i).at(j) = {0, QColor(0, 0, 0), NormalBlock, BorderNone};
+					matrix.at(i).at(j) = {0, QColor(0, 0, 0), BorderNone};
 				}
 			}
 		}
 
 		emit dataChanged(createIndex(test_boundary.ay, test_boundary.ax), createIndex(shape_boundary.by, shape_boundary.bx), {});
-		return shape_boundary.ax;
+		return true;
 	} else {
-		return -1;
+		return false;
 	}
 }
 
-int TetroGridQ::moveShapeRight(unsigned int shape_id) {
+bool TetroGridQ::moveShapeRight(unsigned int shape_id) {
 	// Boundary given in x y coordinates
 	// matrix is y x
+
+	if (shape_id == 0)
+		return false;
+
 	boundary shape_boundary = findBoundary(shape_id);
 
 	if (shape_boundary.bx == getColumns()-1)
-		return -1;
+		return false;
 
 	BoolMatrix shape = findShape(shape_id, shape_boundary);
 
@@ -254,22 +245,22 @@ int TetroGridQ::moveShapeRight(unsigned int shape_id) {
 		}
 
 		emit dataChanged(createIndex(shape_boundary.ay, shape_boundary.ax), createIndex(test_boundary.by, test_boundary.bx), {});
-		return shape_boundary.ax;
+		return true;
 	} else {
-		return -1;
+		return false;
 	}
 }
 
-int TetroGridQ::moveShapeDown(unsigned int shape_id) {
+bool TetroGridQ::moveShapeDown(unsigned int shape_id) {
 	// Boundary given in x y coordinates
 	// matrix is y x
 	if (shape_id == 0)
-		return -1;
+		return false;
 
 	boundary shape_boundary = findBoundary(shape_id);
 
 	if (shape_boundary.by == getRows()-1)
-		return -1;
+		return false;
 
 	BoolMatrix shape = findShape(shape_id, shape_boundary);
 
@@ -283,7 +274,7 @@ int TetroGridQ::moveShapeDown(unsigned int shape_id) {
 			for (unsigned int j = shape_boundary.bx; j >= shape_boundary.ax; --j) {
 				if (matrix.at(i).at(j).id == shape_id) {
 					matrix.at(i+1).at(j) = matrix.at(i).at(j);
-					matrix.at(i).at(j) = {0, QColor(0, 0, 0), NormalBlock, BorderNone};
+					matrix.at(i).at(j) = {0, QColor(0, 0, 0), BorderNone};
 				}
 
 				if (j == 0)
@@ -295,19 +286,23 @@ int TetroGridQ::moveShapeDown(unsigned int shape_id) {
 		}
 
 		emit dataChanged(createIndex(shape_boundary.ay, shape_boundary.ax), createIndex(test_boundary.by, test_boundary.bx), {});
-		return shape_boundary.by;
+		return true;
 	} else {
-		return -1;
+		return false;
 	}
 }
 
-int TetroGridQ::moveShapeUp(unsigned int shape_id) {
+bool TetroGridQ::moveShapeUp(unsigned int shape_id) {
 	// Boundary given in x y coordinates
 	// matrix is y x
+
+	if (shape_id == 0)
+		return false;
+
 	boundary shape_boundary = findBoundary(shape_id);
 
 	if (shape_boundary.ay == 0)
-		return -1;
+		return false;
 
 	BoolMatrix shape = findShape(shape_id, shape_boundary);
 
@@ -321,15 +316,15 @@ int TetroGridQ::moveShapeUp(unsigned int shape_id) {
 			for (unsigned int j = shape_boundary.ax; j <= shape_boundary.bx; ++j) {
 				if (matrix.at(i).at(j).id == shape_id) {
 					matrix.at(i-1).at(j) = matrix.at(i).at(j);
-					matrix.at(i).at(j) = {0, QColor(0, 0, 0), NormalBlock, BorderNone};
+					matrix.at(i).at(j) = {0, QColor(0, 0, 0), BorderNone};
 				}
 			}
 		}
 
 		emit dataChanged(createIndex(test_boundary.ay, test_boundary.ax), createIndex(shape_boundary.by, shape_boundary.bx), {});
-		return shape_boundary.by;
+		return true;
 	} else {
-		return -1;
+		return false;
 	}
 }
 
@@ -344,7 +339,7 @@ bool TetroGridQ::c_rotateShape(unsigned int shape_id) {
 void TetroGridQ::reset() {
 	for (auto& row : matrix) {
 			for (auto& col : row) {
-					col = { 0, QColor(0, 0, 0), NormalBlock, BorderNone };
+					col = { 0, QColor(0, 0, 0), BorderNone };
 			}
 	}
 	new_shape_id = 1;
@@ -366,41 +361,16 @@ std::vector<int> TetroGridQ::checkRows() {
 }
 
 void TetroGridQ::deleteRow(unsigned int index) {
-	struct shape_info {
-		unsigned int id;
-		SpecialType special_type;
-	};
-
-	std::vector<shape_info> modified_shapes;
+	std::vector<unsigned int> modified_shapes;
 
 	for (unsigned int i = 0; i < getColumns(); ++i) {
-		modified_shapes.push_back({ matrix[index][i].id, matrix[index][i].type });
+		modified_shapes.push_back(matrix[index][i].id);
 	}
-	auto u = std::unique(modified_shapes.begin(), modified_shapes.end(),
-											 [](const shape_info& a, const shape_info& b) { return a.id == b.id; });
+	auto u = std::unique(modified_shapes.begin(), modified_shapes.end());
 	modified_shapes.resize(std::distance(modified_shapes.begin(), u));
 
 	removeRows(index, 1);
 	insertRows(0, 1);
-
-	for (const auto& shape : modified_shapes) {
-		if (shape.special_type == 0)
-			continue;
-
-		auto a = std::find_if(matrix[index].begin(), matrix[index].end(),
-							 [&](const block& a) { return a.id == shape.id; });
-
-		bool bottomClear = true;
-		if (index != getRows()-1) {
-			auto b = std::find_if(matrix[index+1].begin(), matrix[index+1].end(),
-								[&](const block& a) { return a.id == shape.id; });
-			if (b != matrix[index+1].end())
-				bottomClear = false;
-		}
-		if (a == matrix[index].end() && bottomClear) {
-			emit activateSpecial(shape.special_type);
-		}
-	}
 
 	for (unsigned int i = 0; i < getColumns(); ++i) {
 		if (matrix.at(index).at(i).id != 0) {
@@ -512,7 +482,7 @@ bool TetroGridQ::rotateShapeHelper(unsigned int shape_id, bool counter) {
 			for (unsigned int j = shape_boundary.ax; j <= shape_boundary.bx; ++j) {
 				if (matrix.at(i).at(j).id == shape_id) {
 					tmp = matrix.at(i).at(j);
-					matrix.at(i).at(j) = {0, QColor(0, 0, 0), NormalBlock, BorderNone};
+					matrix.at(i).at(j) = {0, QColor(0, 0, 0), BorderNone};
 				}
 			}
 		}

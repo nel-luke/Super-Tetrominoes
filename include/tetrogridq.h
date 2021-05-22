@@ -39,7 +39,6 @@ private:
 	struct block {
 		unsigned int id;
 		QColor color;
-		SpecialType type;
 		unsigned int borders;
 	};
 
@@ -53,7 +52,6 @@ private:
 	std::vector<std::vector<block>> matrix;
 	std::vector<QGenericMatrix<4, 2, unsigned int>> shapes;
 	static const std::unordered_map<SpecialType, QString> textures;
-	static const std::unordered_map<SpecialType, QString> singles;
 	int new_shape_id;
 
 	boundary findBoundary(unsigned int shape_id) const;
@@ -65,7 +63,6 @@ private:
 public:
 	enum DataTypes {
 		blockColor = Qt::UserRole,
-		blockTexture,
 		hasBorderLeft,
 		hasBorderRight,
 		hasBorderTop,
@@ -73,17 +70,17 @@ public:
 	};
 
 	enum SpecialType : short {
-		NormalBlock = 0,
-		CancelEffect,
+		RepeatShape,
+		MixControls,
 		NoDrop
 	};
 	Q_ENUM(SpecialType)
 
-	Q_INVOKABLE int spawn(unsigned int shape_type, QColor color, SpecialType special_type, bool alt_spawn = false);
-	Q_INVOKABLE int moveShapeLeft(unsigned int shape_id);
-	Q_INVOKABLE int moveShapeRight(unsigned int shape_id);
-	Q_INVOKABLE int moveShapeDown(unsigned int shape_id);
-	Q_INVOKABLE int moveShapeUp(unsigned int shape_id);
+	Q_INVOKABLE int spawnShape(unsigned int shape_type, QColor color);
+	Q_INVOKABLE bool moveShapeLeft(unsigned int shape_id);
+	Q_INVOKABLE bool moveShapeRight(unsigned int shape_id);
+	Q_INVOKABLE bool moveShapeDown(unsigned int shape_id);
+	Q_INVOKABLE bool moveShapeUp(unsigned int shape_id);
 	Q_INVOKABLE bool rotateShape(unsigned int shape_id);
 	Q_INVOKABLE bool c_rotateShape(unsigned int shape_id);
 	Q_INVOKABLE std::vector<int> checkRows();
@@ -91,7 +88,6 @@ public:
 	Q_INVOKABLE void reset();
 
 	Q_INVOKABLE QString getTexture(SpecialType val) const { return textures.at(val); }
-	Q_INVOKABLE QString getSingle(SpecialType val) const { return singles.at(val); }
 
 	// Constructors
 	explicit TetroGridQ(QObject* parent = nullptr);
@@ -139,7 +135,6 @@ public:
 signals:
 		void rowsChanged();
 		void columnsChanged();
-		void activateSpecial(unsigned int special_type);
 };
 
 #endif // TETROGRIDQ_H

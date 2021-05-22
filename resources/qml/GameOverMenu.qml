@@ -8,7 +8,7 @@ Item {
 	property alias backgroundColor: background.color
 
 	function disappear() { root.state = "retracted" }
-	function appear() { root.state = "visible" }
+	function appear(message) { bigText.text = message; root.state = "visible" }
 
 	signal retryButtonPressed()
 	signal quitButtonPressed()
@@ -24,6 +24,12 @@ Item {
 		anchors.verticalCenter: parent.verticalCenter
 		anchors.horizontalCenter: parent.horizontalCenter
 		spacing: 2
+
+		Label {
+			id: bigText
+			font.pointSize: 68
+			color: "white"
+		}
 
 		Button {
 				text: "Retry"

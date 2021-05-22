@@ -1,6 +1,0 @@
-<RCC>
-    <qresource prefix="/singles/" >
-        <file>no_rotate.png</file>
-        <file>no_drop.png</file>
-    </qresource>
-</RCC>
