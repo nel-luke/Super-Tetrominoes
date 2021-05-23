@@ -1,12 +1,6 @@
 #include "../include/tetrogridq.h"
 #include "../include/c_shapes.h"
 
-const std::unordered_map<TetroGridQ::SpecialType, QString> TetroGridQ::textures {
-	{ RepeatShape, "qrc:/textures/repeat_shape.png" },
-	{ MixControls, "qrc:/textures/mix_controls.png" },
-	{ NoDrop, "qrc:/textures/no_drop.png" },
-};
-
 TetroGridQ::TetroGridQ(QObject* parent) : QAbstractTableModel(parent), matrix(1), new_shape_id(1) {
 	matrix[0].push_back({});
 

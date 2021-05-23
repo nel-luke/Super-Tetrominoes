@@ -20,7 +20,9 @@ Item {
 	property int gridRows: 20
 	property int gridColumns: 16
 	property double block_size: Math.min(root.width/root.gridColumns, (root.height-root.headerHeight)/root.gridRows)
+
 	property int points: startPoints
+	property int points_to_add: 0
 
 	property var shape_colors: [
 		Material.Red, Material.Purple, Material.Blue, Material.Green,
@@ -33,10 +35,11 @@ Item {
 	onDebugChanged: { playerTimer.running = !root.debug }
 
 	property bool game_started: false
-	property bool effects_active: false
-	property bool repeat_shape: false
-	property bool mix_controls: false
-	property bool drop_locked: false
+
+	property int repeat_shape_count: 0
+	property bool change_repeat: false
+
+	property int mix_controls_count: 0
 
 	property var vanish_height: 1
 	property var vanish_rows: []
@@ -51,6 +54,7 @@ Item {
 	signal disablePauseButton()
 	signal gameRetry()
 	signal returnToMenu()
+	signal retractGameOverMenu()
 
 	signal getPoints(var num_points)
 	signal sendSpecial(var special_type)
@@ -61,7 +65,7 @@ Item {
 	function getReturnedSpecial(special_type) { Service.serviceReturnedSpecial(special_type) }
 
 	function startGame() { State.prepareGame(); countDown.activate() }
-	function removePoints(num_points) { State.removePoints(num_points) }
+	function removePoints(num_points) { Service.removePoints(num_points) }
 	function pauseGame() { State.pauseGame() }
 	function resumeGame() { State.resumeGame() }
 	function restartGame() { State.restartGame() }
@@ -124,6 +128,7 @@ Item {
 				fontSize: 16
 				color: "white"
 				text: root.points
+				onDone: { Service.servicePoints() }
 			}
 		}
 
@@ -160,6 +165,7 @@ Item {
 				id: effectScreen
 				anchors.fill: parent
 				backgroundColor: Material.foreground
+				onDone: { Service.servicePoints() }
 			}
 
 			VanishBar {
@@ -168,17 +174,6 @@ Item {
 				x: 0
 			}
 		}
-	}
-
-	GameOverMenu {
-		id: gameOverMenu
-		width: parent.width
-		height: parent.height
-		backgroundColor: Material.background
-		onRetryButtonPressed: { root.gameRetry(); State.restartGame() }
-		onQuitButtonPressed: { root.returnToMenu() }
-
-		onAfterDisappear: { countDown.activate() }
 	}
 
 	onHeightChanged: { table.forceLayout() }

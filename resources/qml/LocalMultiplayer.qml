@@ -62,7 +62,7 @@ Item {
 				onGetPoints: { player2.removePoints(num_points) }
 				onSendSpecial: { player2.getSpecial(special_type) }
 				onReturnSpecial: { player2.getReturnedSpecial(special_type) }
-				onGameFailed: { pauseButton.visible = false; player2.winGame() }
+				onGameFailed: { player2.winGame(); gameOverMenu.appear("Right-Side Wins!") }
 			}
 
 			Rectangle {
@@ -100,7 +100,7 @@ Item {
 				onGetPoints: { player1.removePoints(num_points) }
 				onSendSpecial: { player1.getSpecial(special_type) }
 				onReturnSpecial: { player1.getReturnedSpecial(special_type) }
-				onGameFailed: { pauseButton.visible = false; player1.winGame() }
+				onGameFailed: { player1.winGame(); gameOverMenu.appear("Left-Side Wins!") }
 			}
 	}
 
@@ -114,5 +114,16 @@ Item {
 		onQuitButtonPressed: { root.returnToMenu() }
 
 		onAfterDisappear: { player1.resumeGame(); player2.resumeGame() }
+	}
+
+	GameOverMenu {
+		id: gameOverMenu
+		width: parent.width
+		height: parent.height
+		backgroundColor: Material.background
+		onRetryButtonPressed: { gameOverMenu.disappear() }
+		onQuitButtonPressed: { root.returnToMenu() }
+
+		onAfterDisappear: { root.start() }
 	}
 }

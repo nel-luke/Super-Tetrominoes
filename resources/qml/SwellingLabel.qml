@@ -9,6 +9,8 @@ Label {
 
 	function activate() { root.state = "activated" }
 
+	signal done()
+
 	states: [
 		State {
 			name: "deactivated"
@@ -25,7 +27,6 @@ Label {
 			from: "deactivated"; to: "activated"
 			SequentialAnimation {
 				NumberAnimation { properties: "font.pointSize"; easing.type: Easing.OutQuad; duration: 100 }
-				//PauseAnimation { duration: 100 }
 				ScriptAction { script: { root.state = "deactivated" } }
 			}
 		},
@@ -33,6 +34,8 @@ Label {
 			from: "activated"; to: "deactivated"
 			SequentialAnimation {
 				NumberAnimation { properties: "font.pointSize"; easing.type: Easing.InQuad; duration: 200 }
+				PauseAnimation { duration: 100 }
+				ScriptAction { script: { root.done() } }
 			}
 		}
 

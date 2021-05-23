@@ -1,8 +1,9 @@
 function spawnPlayer() {
-	if (root.repeat_shape === false) {
+	if (root.repeat_shape_count === 0 || root.change_repeat === true) {
 		while (root.shape_history.includes(root.current_shape_type)) {
 			root.current_shape_type = Math.floor(Math.random() * data.numShapes)
 		}
+		root.change_repeat = false
 		root.shape_history.shift()
 		root.shape_history.push(root.current_shape_type)
 	}
@@ -55,53 +56,81 @@ function deleteRow() {
 	}
 	vanishBar.disappear()
 
-	switch (root.vanish_height) {
-	case 1 : serviceState()
-		break
-	case 2 : root.sendSpecial(TetroGridQ.RepeatShape)
-		break
-	case 3 : root.sendSpecial(TetroGridQ.MixControls)
-		break
-	case 4 : root.sendSpecial(TetroGridQ.NoDrop)
-	}
-
-	State.reduceTime()
+	serviceState(root.vanish_height)
 	setVanishBar()
 }
 
 function serviceSpecial(special_type) {
-	var already_activated = false
-
-	switch (special_type) {
-	case TetroGridQ.RepeatShape : already_activated = Effects.activateRepeatShape()
-		break
-	case TetroGridQ.MixControls : already_activated = Effects.activateMixControls()
-		break
-	case TetroGridQ.NoDrop : already_activated = Effects.activateNoDrop()
+	if ((special_type & TetroGridQ.RepeatShape) !== 0) {
+		Effects.incrementRepeatShape()
+		effectScreen.incrementRepeatShape()
 	}
 
-	if (already_activated === true) {
-		root.returnSpecial(special_type)
+	if ((special_type & TetroGridQ.MixControls) !== 0) {
+		Effects.incrementMixControls()
+		effectScreen.incrementMixControls()
+	}
+
+	effectScreen.activate()
+}
+
+function serviceState(num_points) {
+	var original = num_points
+
+	while (num_points !== 0) {
+		if (root.repeat_shape_count !== 0) {
+			Effects.decrementRepeatShape()
+			effectScreen.decrementRepeatShape()
+			num_points--
+		} else {
+			break
+		}
+	}
+
+	while (num_points !== 0) {
+		if (root.mix_controls_count !== 0) {
+			Effects.decrementMixControls()
+			effectScreen.decrementMixControls()
+			num_points--
+		} else {
+			break
+		}
+	}
+
+	if (num_points !== 0) {
+		root.points_to_add = num_points
+
+		switch (num_points) {
+		case 2 : root.sendSpecial(TetroGridQ.RepeatShape)
+			break
+		case 3 : root.sendSpecial(TetroGridQ.MixControls)
+			break
+		case 4 : root.sendSpecial(TetroGridQ.RepeatShape | TetroGridQ.MixControls)
+		}
+	}
+
+	if (num_points !== original) {
+		effectScreen.activate()
 	} else {
-		effectScreen.activate(data.getTexture(special_type))
+		servicePoints()
 	}
 }
 
-function serviceReturnedSpecial(special_type) {
-	switch (special_type) {
-	case TetroGridQ.RepeatShape : State.awardPoints(2)
-		break
-	case TetroGridQ.MixControls : State.awardPoints(3)
-		break
-	case TetroGridQ.NoDrop : State.awardPoints(4)
+function servicePoints() {
+	if (root.points_to_add !== 0) {
+		root.points_to_add--
+		root.points++
+		scoreText.activate()
+		root.getPoints(1)
+		State.adjustTime()
 	}
 }
 
-function serviceState() {
-	if (root.effects_active === true) {
-		effectScreen.activateCancelEffects()
-		Effects.cancelEffects()
-	} else {
-		State.awardPoints(1)
+function removePoints(num_points) {
+	root.points -= num_points
+	scoreText.activate()
+	if (root.points <= 0) {
+		loseGame()
 	}
+	State.adjustTime()
 }

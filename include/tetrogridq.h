@@ -51,7 +51,6 @@ private:
 
 	std::vector<std::vector<block>> matrix;
 	std::vector<QGenericMatrix<4, 2, unsigned int>> shapes;
-	static const std::unordered_map<SpecialType, QString> textures;
 	int new_shape_id;
 
 	boundary findBoundary(unsigned int shape_id) const;
@@ -70,9 +69,8 @@ public:
 	};
 
 	enum SpecialType : short {
-		RepeatShape,
-		MixControls,
-		NoDrop
+		RepeatShape = 1,
+		MixControls = 2,
 	};
 	Q_ENUM(SpecialType)
 
@@ -86,8 +84,6 @@ public:
 	Q_INVOKABLE std::vector<int> checkRows();
 	Q_INVOKABLE void deleteRow(unsigned int index);
 	Q_INVOKABLE void reset();
-
-	Q_INVOKABLE QString getTexture(SpecialType val) const { return textures.at(val); }
 
 	// Constructors
 	explicit TetroGridQ(QObject* parent = nullptr);

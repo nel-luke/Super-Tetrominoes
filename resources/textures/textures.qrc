@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/textures/" >
-        <file>no_drop.png</file>
         <file>mix_controls.png</file>
         <file>repeat_shape.png</file>
     </qresource>

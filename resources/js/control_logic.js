@@ -2,7 +2,7 @@ function doControl(control_id) {
 	switch (control_id) {
 	case 0 : data.rotateShape(root.shape_handle)
 		break
-	case 1 : servicePlayer()
+	case 1 : Service.servicePlayer()
 		break
 	case 2 : data.moveShapeLeft(root.shape_handle)
 		break
@@ -15,11 +15,12 @@ function keyUp() {
 }
 
 function keyDown() {
-	if (root.mix_controls === false) {
-		if (playerTimer.running === true)
+	if (root.mix_controls_count === 0) {
+		if (playerTimer.running === true) {
 			dropShape()
-		else
+		} else {
 			Service.servicePlayer()
+		}
 	} else {
 		doControl(root.controls_order[1])
 	}
@@ -34,10 +35,8 @@ function keyRight() {
 }
 
 function dropShape() {
-	if (root.drop_locked === false) {
-		while (data.moveShapeDown(root.shape_handle))
-			;
-		if (playerTimer.running === true)
-			playerTimer.restart()
-	}
+	while (data.moveShapeDown(root.shape_handle))
+		;
+	if (playerTimer.running === true)
+		playerTimer.restart()
 }

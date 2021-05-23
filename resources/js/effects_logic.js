@@ -1,24 +1,36 @@
 function cancelEffects() {
-	root.repeat_shape = false
+	root.repeat_shape_count = 0
+	root.change_repeat = false
+	effectScreen.repeat_shape_count = 0
+
+	root.mix_controls_count = 0
 	root.controls_order = [0, 1, 2, 3]
-	root.mix_controls = false
-	root.drop_locked = false
-	root.effects_active = false
+	effectScreen.mix_controls_count = 0
 }
 
-function activateRepeatShape() {
-	var check = root.repeat_shape
-	root.repeat_shape = true
-	root.effects_active = true
-	return check
+function incrementRepeatShape() {
+	root.repeat_shape_count++
+	root.change_repeat = true
 }
 
-function activateMixControls() {
-	var check = root.mix_controls
+function decrementRepeatShape() {
+	root.repeat_shape_count--
+	root.change_repeat = true
+}
+
+function incrementMixControls() {
+	root.mix_controls_count++
 	root.controls_order = shuffle(root.controls_order)
-	root.mix_controls = true
-	root.effects_active = true
-	return check
+}
+
+function decrementMixControls() {
+	root.mix_controls_count--
+
+	if (root.mix_controls_count !== 0) {
+		root.controls_order = shuffle(root.controls_order)
+	} else {
+		root.controls_order = [0, 1, 2, 3]
+	}
 }
 
 function shuffle(array) {
@@ -36,9 +48,3 @@ function shuffle(array) {
 	return array;
 }
 
-function activateNoDrop() {
-	var check = root.drop_locked
-	root.drop_locked = true
-	root.effects_active = true
-	return check
-}
