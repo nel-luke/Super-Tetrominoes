@@ -16,7 +16,7 @@ function keyUp() {
 
 function keyDown() {
 	if (root.mix_controls_count === 0) {
-		if (playerTimer.running === true) {
+		if (root.debug === false) {
 			dropShape()
 		} else {
 			Service.servicePlayer()

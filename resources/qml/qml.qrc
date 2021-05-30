@@ -4,6 +4,7 @@
     </qresource>
     <qresource prefix="/qml/components">
         <file>LocalMultiplayer.qml</file>
+        <file>OnlineMultiplayer.qml</file>
     </qresource>
     <qresource prefix="/qml/types">
         <file>VanishBar.qml</file>
@@ -15,6 +16,9 @@
         <file>EffectScreen.qml</file>
         <file>SwellingLabel.qml</file>
         <file>PlayArea.qml</file>
+        <file>LoginMenu.qml</file>
+        <file>OnlinePlayerRow.qml</file>
+        <file>Lobby.qml</file>
     </qresource>
     <qresource prefix="/">
         <file>qtquickcontrols2.conf</file>

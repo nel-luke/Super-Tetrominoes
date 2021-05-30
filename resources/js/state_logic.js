@@ -9,11 +9,12 @@ function goGame() {
 	root.enablePauseButton()
 	root.setFocus()
 	if (root.game_started === false) {
-		Service.spawnPlayer()
+		if (root.dummy === false)
+			Service.spawnPlayer()
 		root.game_started = true
 	}
 
-	if (root.debug !== true)
+	if ((root.debug || root.dummy) === false)
 		playerTimer.start()
 }
 

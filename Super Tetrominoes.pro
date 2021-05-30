@@ -16,9 +16,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 INCLUDEPATH += include/
 HEADERS = \
     include/c_shapes.h \
-    include/tetrogridq.h
-SOURCES = src/main.cpp \
-    src/tetrogridq.cpp
+    include/tetrogridq.h \
+    include/tetroclientq.h
+SOURCES = \
+    src/main.cpp \
+    src/tetrogridq.cpp \
+    src/tetroclientq.cpp
 
 RESOURCES = \
     resources/qml/qml.qrc \

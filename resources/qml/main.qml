@@ -10,7 +10,7 @@ import "qrc:/qml/types"
 Window {
 	id: windowRoot
 	visible: true
-	width: 1920
+	width: 860 //1920
 	height: 1000
 	visibility: Qt.WindowMaximized
 	title: qsTr("Super Tetrominoes")
@@ -24,11 +24,19 @@ Window {
 
 		function deactivate() { active = false }
 		function loadLocalMultiplayer() { sourceComponent = localMultiplayer; active = true }
+		function loadOnlineMultiplayer() { sourceComponent = onlineMultiplayer; active = true }
 	}
 
 	Component {
 		id: localMultiplayer
 		LocalMultiplayer {
+			onReturnToMenu: { windowRoot.returnToMenu() }
+		}
+	}
+
+	Component {
+		id: onlineMultiplayer
+		OnlineMultiplayer {
 			onReturnToMenu: { windowRoot.returnToMenu() }
 		}
 	}
@@ -39,7 +47,7 @@ Window {
 			height: parent.height
 			backgroundColor: Material.primary
 			onLocalMultiplayerPressed: { mainMenu.disappear(); loader.loadLocalMultiplayer() }
-			onOnlineMultiplayerPressed: { sweller.activate() }
+			onOnlineMultiplayerPressed: { mainMenu.disappear(); loader.loadOnlineMultiplayer() }
 			onQuitButtonPressed: { Qt.callLater(Qt.quit) }
 
 			onAfterDisappear: { loader.item.start() }

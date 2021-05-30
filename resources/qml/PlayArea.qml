@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.15
 
 import Custom 1.0
+
 import "qrc:/js/control_logic.js" as Control
 import "qrc:/js/effects_logic.js" as Effects
 import "qrc:/js/service_logic.js" as Service
@@ -31,6 +32,8 @@ Item {
 
 	property int shape_handle: 0
 
+	property bool dummy: false
+
 	property bool debug: false
 	onDebugChanged: { playerTimer.running = !root.debug }
 
@@ -53,16 +56,17 @@ Item {
 	signal enablePauseButton()
 	signal disablePauseButton()
 	signal gameRetry()
-	signal returnToMenu()
-	signal retractGameOverMenu()
 
 	signal getPoints(var num_points)
 	signal sendSpecial(var special_type)
-	signal returnSpecial(var special_type)
+	signal shapeSpawned(var shape_type, var shape_color)
+	signal playerService()
 	signal gameFailed()
 
 	function getSpecial(special_type) { Service.serviceSpecial(special_type) }
 	function getReturnedSpecial(special_type) { Service.serviceReturnedSpecial(special_type) }
+	function spawnShape(shape_type, shape_color) { root.shape_handle = data.spawnShape(shape_type, shape_color) }
+	function servicePlayer() { Service.servicePlayer() }
 
 	function startGame() { State.prepareGame(); countDown.activate() }
 	function removePoints(num_points) { Service.removePoints(num_points) }

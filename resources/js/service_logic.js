@@ -15,6 +15,7 @@ function spawnPlayer() {
 	root.color_history.shift()
 	root.color_history.push(shape_color)
 
+	root.shapeSpawned(root.current_shape_type, root.getColor(root.shape_colors[shape_color]))
 	root.shape_handle = data.spawnShape(root.current_shape_type, root.getColor(root.shape_colors[shape_color]))
 	if (root.shape_handle === -1) {
 		State.loseGame()
@@ -22,10 +23,13 @@ function spawnPlayer() {
 }
 
 function servicePlayer() {
+	root.playerService()
 	if (data.moveShapeDown(root.shape_handle) === false) {
 		root.vanish_rows = data.checkRows()
 		setVanishBar()
-		spawnPlayer()
+
+		if (root.dummy === false)
+			spawnPlayer()
 	}
 }
 
