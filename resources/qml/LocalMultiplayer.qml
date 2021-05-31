@@ -54,7 +54,7 @@ Item {
 				width: 7*parent.width/16
 				height: parent.height
 				onSetFocus: { background.focus = true }
-				onGameRetry: { pauseButton.visible = true; player2.restartGame() }
+				//onGameRetry: { pauseButton.visible = true; player2.restartGame() }
 				onEnablePauseButton: { pauseButton.enabled = true }
 				onDisablePauseButton: { pauseButton.enabled = false }
 
@@ -93,7 +93,7 @@ Item {
 				height: parent.height
 			debug: true
 				//onSetFocus: { background.focus = true }
-				onGameRetry: { player1.restartGame() }
+				//onGameRetry: { player1.restartGame() }
 				onGetPoints: { player1.removePoints(num_points) }
 				onSendSpecial: { player1.getSpecial(special_type) }
 				onGameFailed: { player1.winGame(); gameOverMenu.appear("Left-Side Wins!") }

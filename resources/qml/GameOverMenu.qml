@@ -32,11 +32,6 @@ Item {
 		}
 
 		Button {
-				text: "Retry"
-				onClicked: retryButtonPressed()
-		}
-
-		Button {
 			text: "Quit to Menu"
 			onClicked: quitButtonPressed()
 		}

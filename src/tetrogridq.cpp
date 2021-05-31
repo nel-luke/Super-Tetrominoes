@@ -505,3 +505,7 @@ bool TetroGridQ::rotateShapeHelper(unsigned int shape_id, bool counter) {
 		return false;
 	}
 }
+
+void TetroGridQ::makeSnapshot() {
+
+}

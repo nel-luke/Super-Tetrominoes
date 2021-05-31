@@ -23,7 +23,6 @@ function spawnPlayer() {
 }
 
 function servicePlayer() {
-	root.playerService()
 	if (data.moveShapeDown(root.shape_handle) === false) {
 		root.vanish_rows = data.checkRows()
 		setVanishBar()
@@ -134,7 +133,7 @@ function removePoints(num_points) {
 	root.points -= num_points
 	scoreText.activate()
 	if (root.points <= 0) {
-		loseGame()
+		State.loseGame()
 	}
 	State.adjustTime()
 }

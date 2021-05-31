@@ -16,7 +16,7 @@ Item {
 	readonly property int headerHeight: 50
 	readonly property int difficulty: 20
 	readonly property int timerInt: 500
-	readonly property int startPoints: 10
+	readonly property int startPoints: 2
 
 	property int gridRows: 20
 	property int gridColumns: 16
@@ -35,7 +35,7 @@ Item {
 	property bool dummy: false
 
 	property bool debug: false
-	onDebugChanged: { playerTimer.running = !root.debug }
+	onDebugChanged: { playerTimer.running = !(root.debug || root.dummy) }
 
 	property bool game_started: false
 
@@ -55,7 +55,7 @@ Item {
 	signal setFocus()
 	signal enablePauseButton()
 	signal disablePauseButton()
-	signal gameRetry()
+	//signal gameRetry()
 
 	signal getPoints(var num_points)
 	signal sendSpecial(var special_type)
@@ -64,7 +64,7 @@ Item {
 	signal gameFailed()
 
 	function getSpecial(special_type) { Service.serviceSpecial(special_type) }
-	function getReturnedSpecial(special_type) { Service.serviceReturnedSpecial(special_type) }
+	//function getReturnedSpecial(special_type) { Service.serviceReturnedSpecial(special_type) }
 	function spawnShape(shape_type, shape_color) { root.shape_handle = data.spawnShape(shape_type, shape_color) }
 	function servicePlayer() { Service.servicePlayer() }
 
@@ -72,6 +72,7 @@ Item {
 	function removePoints(num_points) { Service.removePoints(num_points) }
 	function pauseGame() { State.pauseGame() }
 	function resumeGame() { State.resumeGame() }
+	function resumeGameNow() { State.goGame() }
 	function restartGame() { State.restartGame() }
 	function winGame() { State.winGame() }
 
@@ -85,14 +86,14 @@ Item {
 	}
 
 	TetroGridQ {
-		id: data; rows: root.gridRows; columns: root.gridColumns;
+		id: data; rows: root.gridRows; columns: root.gridColumns
 	}
 
 	Timer {
 		id: playerTimer
 		interval: timerInt
 		repeat: true
-		onTriggered: { Service.servicePlayer() }
+		onTriggered: { 	root.playerService(); Service.servicePlayer() }
 	}
 
 	Timer {

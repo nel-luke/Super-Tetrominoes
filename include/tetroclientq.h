@@ -40,7 +40,8 @@ private:
 		Disconnected,
 		ChallengeAccepted,
 		ChallengeDeclined,
-		Control
+		Control,
+		//RepeatControl
 	};
 
 	enum ControlName {
@@ -53,19 +54,27 @@ private:
 		WinGame,
 		SpawnShape,
 		ServicePlayer,
-		DebugPlayer
+		DebugPlayer,
+	};
+
+	struct control {
+		ControlName name;
+		QVariantList args;
 	};
 
 	QNetworkAccessManager* const manager;
 	QUrl server_address;
+	QList<control> control_log;
+	QVector<QJsonObject> control_queue;
+	int next_control_number;
 
 	void sendData(const QString& message_type, QJsonObject&& data = QJsonObject()) const;
-	void sendControl(ControlName control_name, QVariantList&& args = QVariantList()) const;
+	void sendControl(ControlName control_name, QVariantList&& args = QVariantList());
 	QList<QVariantMap> makeList(const QJsonArray&& values) const;
 	void makeLeaderboard(const QJsonArray& values) const;
 
 	void handleLoginSuccessful(QJsonObject&& data) const;
-	void handleControl(QJsonArray&& data) const;
+	void handleControl(QJsonArray&& data);
 
 public:
 
@@ -89,25 +98,25 @@ public:
 	Q_INVOKABLE void declineChallenge() const { sendData("DeclineChallenge"); }
 
 	// Controls
-	Q_INVOKABLE void sendKeyUp() const { sendControl(KeyUp); }
-	Q_INVOKABLE void sendKeyDown() const { sendControl(KeyDown); }
-	Q_INVOKABLE void sendKeyLeft() const { sendControl(KeyLeft); }
-	Q_INVOKABLE void sendKeyRight() const { sendControl(KeyRight); }
-	Q_INVOKABLE void sendDebug(bool result) const { sendControl(DebugPlayer, { result }); }
+	Q_INVOKABLE void sendKeyUp() { sendControl(KeyUp); }
+	Q_INVOKABLE void sendKeyDown() { sendControl(KeyDown); }
+	Q_INVOKABLE void sendKeyLeft() { sendControl(KeyLeft); }
+	Q_INVOKABLE void sendKeyRight() { sendControl(KeyRight); }
+	Q_INVOKABLE void sendDebug(bool result) { sendControl(DebugPlayer, { result }); }
 
 private slots:
-	void getReply(QNetworkReply* reply) const;
+	void getReply(QNetworkReply* reply);
 
 public slots:
-	void sendRemovePoints(unsigned int num_points) const
+	void sendRemovePoints(unsigned int num_points)
 		{ sendControl(RemovePoints, {num_points}); }
-	void sendGetSpecial(unsigned int special_type) const
+	void sendGetSpecial(unsigned int special_type)
 		{ sendControl(GetSpecial, {special_type}); }
-	void sendWinGame() const { sendControl(WinGame); }
+	void sendWinGame() { sendControl(WinGame); sendData("GameFailed"); }
 
-	void sendSpawnShape(unsigned int shape_type, QColor shape_color) const
+	void sendSpawnShape(unsigned int shape_type, QColor shape_color)
 		{ sendControl(SpawnShape, {shape_type, shape_color}); }
-	void sendServicePlayer() const { sendControl(ServicePlayer); }
+	void sendServicePlayer() { sendControl(ServicePlayer); }
 
 signals:
 	void serverAddressChanged() const;

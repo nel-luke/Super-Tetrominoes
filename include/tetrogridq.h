@@ -128,9 +128,14 @@ public:
 
 			~TetroGridQ() {};
 
+public slots:
+		void makeSnapshot();
+
 signals:
 		void rowsChanged();
 		void columnsChanged();
+
+		void sendSnapshot();
 };
 
 #endif // TETROGRIDQ_H
