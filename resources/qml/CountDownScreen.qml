@@ -4,7 +4,7 @@ Item {
 	id: root
 	state: "deactivated"
 
-	property alias backgroundColor: background.color
+	property alias background_color: background.color
 	property int digit: 3
 
 	function activate() { root.state = "activated" }
@@ -32,18 +32,20 @@ Item {
 		repeat: true
 		onTriggered: { root.count() }
 	}
-
 	Rectangle {
 		id: background
 		anchors.fill: parent
 	}
-
 	Text {
 		id: countDownText
 		anchors.centerIn: parent
+		width: parent.width
+		height: parent.height / 3
+		horizontalAlignment: Text.AlignHCenter
 		visible: false
 		font.bold: true
-		font.pointSize: 128
+		fontSizeMode: Text.VerticalFit
+		font.pointSize: 512
 		color: "white"
 		text: root.digit
 	}
@@ -55,10 +57,9 @@ Item {
 		},
 		State {
 			name: "activated"
-			PropertyChanges { target: root; opacity: 0.8; visible: true }
+			PropertyChanges { target: root; opacity: 0.75; visible: true }
 		}
 	]
-
 	transitions: [
 		Transition {
 			from: "deactivated"; to: "activated"

@@ -35,7 +35,7 @@ function resetGame() {
 	root.game_started = false
 }
 
-function winGame() {
+function resetGameCompletely() {
 	resetGame()
 	resetTimer.start()
 }
@@ -47,5 +47,5 @@ function loseGame() {
 }
 
 function adjustTime() {
-	//tickTimer.interval *= 1 - score/difficulty
+	playerTimer.interval = -25*root.points + 750
 }

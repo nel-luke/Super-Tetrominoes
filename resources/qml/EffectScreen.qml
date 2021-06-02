@@ -1,23 +1,33 @@
 import QtQuick 2.0
 import QtQuick.Controls 2.15
-import QtGraphicalEffects 1.15
+import QtQuick.Layouts 1.15
 
 Item {
 	id: root
 	state: "deactivated"
 
-	property alias backgroundColor: background.color
+	property int block_size
+
+	property alias background_color: background.color
 	property int repeat_shape_count: 0
 	property int repeat_to_add: 0
 
 	property int mix_controls_count: 0
 	property int mix_to_add: 0
 
-	function incrementRepeatShape() { root.repeat_to_add++ }
-	function decrementRepeatShape() { root.repeat_to_add-- }
+	function incrementRepeatShape() {
+		root.repeat_to_add++
+	}
+	function decrementRepeatShape() {
+		root.repeat_to_add--
+	}
 
-	function incrementMixControls() { root.mix_to_add++ }
-	function decrementMixControls() { root.mix_to_add-- }
+	function incrementMixControls() {
+		root.mix_to_add++
+	}
+	function decrementMixControls() {
+		root.mix_to_add--
+	}
 
 	function activate() {
 		root.state = "activated"
@@ -56,60 +66,99 @@ Item {
 		}
 	}
 
-	signal done()
+	signal done
 
 	Rectangle {
 		id: background
 		anchors.fill: parent
+	}
+	Column {
+		id: columns
+		anchors.centerIn: parent
+		width: parent.width
+		height: root.block_size * 10
+		spacing: root.block_size * 2
 
-		Column {
-			anchors.centerIn: parent
+		Row {
+			anchors.horizontalCenter: parent.horizontalCenter
+			width: parent.width
+			height: root.block_size * 4
 
 			Row {
-				anchors.horizontalCenter: parent.horizontalCenter
+				width: parent.width / 2
+				height: parent.height
+
 				SwellingLabel {
 					id: repeatText
+					width: parent.width * 0.7
+					height: parent.height
+					horizontalAlignment: Text.AlignRight
 					font.bold: true
-					fontSize: 68
+					font_size: repeatShapeLabel.fontInfo.pointSize
 					color: "white"
 					text: root.repeat_shape_count
-					onDone: { root.serviceRepeat() }
+					onDone: {
+						root.serviceRepeat()
+					}
 				}
 				Label {
 					id: repeatShapeLabel
+					height: parent.height
 					font.bold: true
-					font.pointSize: 68
+					fontSizeMode: Text.VerticalFit
+					font.pointSize: 128
 					color: "white"
-					text: "x "
-				}
-				Image {
-					width: height
-					height: repeatShapeLabel.height
-					source: "qrc:/textures/repeat_shape.png"
+					text: "x"
 				}
 			}
+			Image {
+				width: parent.width / 2
+				height: parent.height
+				horizontalAlignment: Image.AlignLeft
+				verticalAlignment: Image.AlignVCenter
+				fillMode: Image.PreserveAspectFit
+				source: "qrc:/textures/repeat_shape_plain.svg"
+			}
+		}
+
+		Row {
+			anchors.horizontalCenter: parent.horizontalCenter
+			width: parent.width
+			height: root.block_size * 4
+
 			Row {
-				anchors.horizontalCenter: parent.horizontalCenter
+				width: parent.width / 2
+				height: parent.height
+
 				SwellingLabel {
 					id: mixText
+					width: parent.width * 0.7
+					height: parent.height
+					horizontalAlignment: Text.AlignRight
 					font.bold: true
-					fontSize: 68
+					font_size: repeatShapeLabel.fontInfo.pointSize
 					color: "white"
 					text: root.mix_controls_count
-					onDone: { root.serviceMix() }
+					onDone: {
+						root.serviceMix()
+					}
 				}
 				Label {
 					id: mixControlsLabel
+					height: parent.height
 					font.bold: true
-					font.pointSize: 68
+					fontSizeMode: Text.VerticalFit
+					font.pointSize: 128
 					color: "white"
-					text: "x "
+					text: "x"
 				}
-				Image {
-					width: height
-					height: mixControlsLabel.height
-					source: "qrc:/textures/mix_controls.png"
-				}
+			}
+			Image {
+				width: parent.width / 3
+				height: parent.height
+				anchors.verticalCenter: parent.verticalCenter
+				fillMode: Image.PreserveAspectFit
+				source: "qrc:/textures/mix_controls_plain.svg"
 			}
 		}
 	}
@@ -117,14 +166,13 @@ Item {
 	states: [
 		State {
 			name: "deactivated"
-			PropertyChanges {	target: root; opacity: 0; visible: false	}
+			PropertyChanges { target: root; opacity: 0; visible: false }
 		},
 		State {
 			name: "activated"
-			PropertyChanges { target: root; opacity: 0.8; visible: true }
+			PropertyChanges { target: root; opacity: 0.75; visible: true }
 		}
 	]
-
 	transitions: [
 		Transition {
 			from: "deactivated"; to: "activated"
@@ -144,6 +192,5 @@ Item {
 				ScriptAction { script: { root.done() } }
 			}
 		}
-
 	]
 }

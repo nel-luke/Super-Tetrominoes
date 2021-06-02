@@ -3,37 +3,60 @@ import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.15
 import QtQuick.Layouts 1.15
 
-import "qrc:/qml/types"
 
 Item {
 	id: root
 
 	state: "visible"
 
-	required property var username
-	required property var score
-	required property var online_players
+	property string username: ""
+	property var score: 0
+	property var online_players: []
+	property var leaderboard: []
 
 	function disappear() { root.state = "retracted"; root.stopRefresh() }
-	function appear() { root.state = "visible"; root.startRefresh() }
+	function appear() { root.refreshPlayers(); root.state = "visible"; root.startRefresh() }
+	//function appearNow() { root.state = ""; root.appear() }
 
 	function startRefresh() { listTimer.start() }
 	function stopRefresh() { listTimer.stop() }
 
-	function activateDialog(message) { dialog.appear() }
+	function challengeAlert(username) { getChallengeDialog.appear(username) }
+
+	function makeChallenge(player_id, player_username) {
+		sendChallengeDialog.appear(player_username)
+		root.sendChallenge(player_id, player_username)
+	}
+
+	function challengeDeclined() {
+		sendChallengeDialog.closeWithMessage("Challenge declined", false)
+	}
+
+	function challengeAccepted() {
+		sendChallengeDialog.closeWithMessage("Challenge accepted!", true)
+	}
 
 	signal returnToMenu()
 	signal refreshPlayers()
 	signal sendChallenge(var player_id)
+	signal setUsername(var username)
 
 	signal acceptChallenge()
 	signal declineChallenge()
 
 	signal afterDisappear()
+	signal afterAppear()
 
-	Pane {
+	Timer {
+		id: listTimer
+		interval: 1000
+		repeat: true
+		onTriggered: { root.refreshPlayers() }
+	}
+
+	Rectangle {
 		anchors.fill: parent
-		//color: Material.primary
+		color: Material.primary
 	}
 
 	ColumnLayout {
@@ -46,6 +69,9 @@ Item {
 				Layout.minimumWidth: parent.width/3
 				Label {
 					anchors.centerIn: parent
+					color: "white"
+					font.pointSize: 24
+					font.bold: true
 					text: "Welcome, " + root.username + "!"
 				}
 			}
@@ -53,6 +79,9 @@ Item {
 				Layout.minimumWidth: parent.width/3
 				Label {
 					anchors.centerIn: parent
+					color: "white"
+					font.pointSize: 24
+					font.bold: true
 					text: "Score: " + root.score
 				}
 			}
@@ -61,7 +90,8 @@ Item {
 				Button {
 					anchors.centerIn: parent
 					text: "Logout"
-					onClicked: root.returnToMenu()
+					onClicked: { root.returnToMenu() }
+
 				}
 			}
 		}
@@ -70,13 +100,18 @@ Item {
 			id: tabButtons
 			Layout.fillWidth: true
 			Layout.minimumHeight: 50
+
+			background: Rectangle {
+				color: Material.primary
+			}
+
 			TabButton {
-					text: "Online Players"
-					Layout.minimumWidth: parent.width/2
+				text: "Online Players"
+				Layout.minimumWidth: parent.width/2
 			}
 			TabButton {
-					text: "Leaderboard"
-					Layout.fillWidth: true
+				text: "Leaderboard"
+				Layout.fillWidth: true
 			}
 		}
 
@@ -87,119 +122,39 @@ Item {
 			Layout.fillWidth: true
 			Layout.fillHeight: true
 
-			Timer {
-				id: listTimer
-				interval: 1000
-				repeat: true
-				onTriggered: { root.refreshPlayers() }
+			OnlinePlayers {
+				background_color: Material.color(Material.Grey, Material.shade300)
+				online_players: root.online_players
+
+				onSendChallenge: { root.makeChallenge(player_id, username) }
 			}
 
-			Item {
-					Frame {
-						id: thing
-						anchors.fill: parent
-						background: Rectangle { color: "white" }
-						ListView {
-							anchors.fill: parent
-							model: root.online_players
-							delegate: OnlinePlayerRow {
-								text: root.online_players[index].username
-								onSendChallenge: {
-									root.sendChallenge(root.online_players[row_index].id) }
-							}
-							add: Transition {
-									NumberAnimation { properties: "x,y"; from: 100; duration: 1000 }
-							}
-							addDisplaced: Transition {
-									NumberAnimation { properties: "x,y"; duration: 1000 }
-							}
-						}
-					}
+			Leaderboard {
+				id: leaderboardViewer
+				background_color: Material.color(Material.Grey, Material.shade300)
+				leaderboard: root.leaderboard
+				username: root.username
 			}
-			Item {
-					id: secondPage
-			}
+		}
+
+		Rectangle {
+			Layout.fillWidth: true
+			Layout.minimumHeight: root.height * 0.01
+			color: Material.primary
 		}
 	}
 
-//	Dialog {
-//			id: dialog
-//			anchors.centerIn: parent
-//			title: "Challenge Request"
-//			visible: false
-//			modal: true
-//			standardButtons: Dialog.Ok | Dialog.Cancel
+	SendChallengeDialog {
+		id: sendChallengeDialog
+		anchors.fill: parent
+		onDialogClosed: { root.disappear() }
+	}
 
-//			property int timeLeft: 10
-
-//			implicitWidth: parent.width/3
-//			implicitHeight: parent.height/3
-
-//			function appear(message) {
-//				msg.text = message
-//				dialog.timeLeft = 10;
-//				//dialog.setModal(true)
-//				dialog.open()
-//				//downTimer.start()
-//				dialog.visible = true
-//			}
-
-//			Component.onCompleted: {
-//				//dialog.standardButton(Dialog.Ok).text = "Accept"
-//				//dialog.standardButton(Dialog.Cancel).text = "Decline (" + dialog.timeLeft +")"
-//			}
-
-//			onAccepted: { root.acceptChallenge() }
-//			onRejected: { root.declineChallenge() }
-
-//			Timer {
-//				id: downTimer
-//				interval: 1000
-//				repeat: true
-//				onTriggered: {
-//					if (dialog.timeLeft-- === 0) {
-//						downTimer.stop(); dialog.reject()
-//					} else {
-//						dialog.standardButton(Dialog.Cancel).text = "Decline (" + dialog.timeLeft +")"
-//					}
-//				}
-//			}
-
-//			Label { id: msg }
-//	}
-
-	Rectangle {
-		id: dialog
-
-		width: parent/3
-		height: parent/3
-		anchors.centerIn: parent
-
-		visible: false
-
-		function appear() {
-			dialog.visible = true
-		}
-
-		function disappear() {
-			dialog.visible = false
-		}
-
-		Row {
-			width: parent.width
-			height: parent.height/5
-			spacing: 2
-
-			Button {
-				text: "Accept"
-				onClicked: root.acceptChallenge()
-			}
-
-			Button {
-				text: "Decline"
-				onClicked: root.declineChallenge()
-			}
-		}
+	GetChallengeDialog {
+		id: getChallengeDialog
+		anchors.fill: parent
+		onAcceptPressed: { root.acceptChallenge(); root.setUsername(username); getChallengeDialog.disappear(); root.disappear() }
+		onDeclinePressed: { root.declineChallenge(); getChallengeDialog.disappear() }
 	}
 
 	states: [
@@ -227,6 +182,7 @@ Item {
 			SequentialAnimation {
 				PropertyAnimation { properties: "visible, focus" }
 				NumberAnimation { properties: "y"; easing.type: Easing.InOutQuad; duration: 500 }
+				ScriptAction { script: { root.afterAppear() } }
 			}
 		}
 	]

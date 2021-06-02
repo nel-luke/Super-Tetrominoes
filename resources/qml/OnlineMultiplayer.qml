@@ -10,10 +10,11 @@ import "qrc:/qml/types"
 Item {
 	id: root
 
-	property var username
-	property int score
-	property var online_players
-	property var leaderboard
+	property string username
+	property string opponent_username
+	property int score: 0
+	property var online_players: []
+	property var leaderboard: []
 
 	signal returnToMenu()
 
@@ -24,22 +25,27 @@ Item {
 		server_address: "http://www.server.super-tetrominoes.online/server.php"
 
 		onLoginSuccessful: {
-			root.username = username; root.score = score
+			root.username = username
 			loginMenu.disappear()
 			lobby.startRefresh()
+			pollTimer.start()
 		}
 		onLoginFail: { loginMenu.usernameExists() }
-		onOnlinePlayersReady: { root.online_players = list; pollTimer.start() }
-		onLeaderboardReady: { root.leaderboard = list }
+		onPlayerListReady: {
+			root.score = score
+			root.online_players = online_players
+			root.leaderboard = leaderboard
+		}
 		onChallengeSent: { }
-		onChallengeAlert: { lobby.activateDialog(username + " has challenged you.") }
-		onDisconnected: { player1.winGame(); gameOverMenu.appear("You win!"); root.score++ }
-		onChallengeAccepted: { lobby.disappear() }
-		onChallengeDeclined: { }
+		onChallengeAlert: { lobby.challengeAlert(username) }
+		onDisconnected: { player1.resetGame(); player2.resetGame(); gameOverMenu.appear("Connection lost") }
+		onChallengeAccepted: { lobby.challengeAccepted() }
+		onChallengeDeclined: { lobby.challengeDeclined() }
+		onStartGame: { player1.startGame(); player2.startGame() }
 
 		onGetRemovePoints: { player1.removePoints(num_points) }
 		onGetGetSpecial: { player1.getSpecial(special_type) }
-		onGetWinGame: { player1.winGame(); gameOverMenu.appear("You win!") }
+		onGetWinGame: { player1.resetGame(); player2.resetGame(); gameOverMenu.appear("You win!") }
 
 		onGetSpawnShape: { player2.spawnShape(shape_type, shape_color) }
 		onGetServicePlayer: { player2.servicePlayer() }
@@ -59,16 +65,21 @@ Item {
 
 	Rectangle {
 		id: background
+		focus: false
 		anchors.fill: parent
-		color: Material.background
+		color: Material.primary
 		Keys.onPressed: {
-			switch(event.key) {
+			switch (event.key) {
+			case Qt.Key_Up:
 			case Qt.Key_W : player1.keyUp(); client.sendKeyUp()
 				break;
+			case Qt.Key_Down:
 			case Qt.Key_S : player1.keyDown(); client.sendKeyDown()
 				break;
+			case Qt.Key_Left:
 			case Qt.Key_A : player1.keyLeft(); client.sendKeyLeft()
 				break;
+			case Qt.Key_Right:
 			case Qt.Key_D : player1.keyRight(); client.sendKeyRight()
 				break;
 
@@ -80,14 +91,29 @@ Item {
 		}
 	}
 
-	Row {
+	Grid {
 			width: parent.width
 			height: parent.height
 
+			onWidthChanged: {
+				if (width < height) {
+					columns = 1
+					rows = 2
+					flow = Grid.TopToBottom
+					forceLayout()
+				} else {
+					columns = 2
+					rows = 1
+					flow = Grid.LeftToRight
+					forceLayout()
+				}
+			}
+
 			PlayArea {
 				id: player1
-				width: 7*parent.width/16
-				height: parent.height
+				username: root.username
+				width: parent.width < parent.height ? parent.width : parent.width/2
+				height: parent.width < parent.height ? parent.height/2 : parent.height
 				onSetFocus: { background.focus = true }
 				//onGameRetry: { pauseButton.visible = true} //; player2.restartGame() }
 				//onEnablePauseButton: { pauseButton.enabled = true }
@@ -95,41 +121,20 @@ Item {
 
 				onGetPoints: { client.sendRemovePoints(num_points); player2.removePoints(num_points) }
 				onSendSpecial: { client.sendGetSpecial(special_type); player2.getSpecial(special_type) }
-				onGameFailed: { client.sendWinGame(); gameOverMenu.appear("You Lose"); root.score-- }
+				onGameFailed: { client.sendWinGame(); player2.resetGame(); gameOverMenu.appear("You Lose") }
 
 				onShapeSpawned: { client.sendSpawnShape(shape_type, shape_color) }
 				onPlayerService: { client.sendServicePlayer() }
 			}
 
-			Rectangle {
-				width: parent.width/8
-				height: parent.height
-				color: Material.background
-
-				Rectangle {
-					width: parent.width
-					height: root.header_height
-					color: Material.background
-
-//					Button {
-//						id: pauseButton
-//						enabled: false
-//						anchors.centerIn: parent
-//						text: "Pause"
-//						onClicked: {
-//							player1.pauseGame()
-//							client.sendPauseGame()
-//							pauseMenu.appear()
-//						}
-//					}
-				}
-			}
-
 			PlayArea {
 				id: player2
-				width: 7*parent.width/16
-				height: parent.height
+				username: root.opponent_username
+				width: parent.width < parent.height ? parent.width : parent.width/2
+				height: parent.width < parent.height ? parent.height/2 : parent.height
 				dummy: true
+				show_wait_screen: true
+
 				//onSetFocus: { background.focus = true }
 				//onGameRetry: { player1.restartGame() }
 				//onGetPoints: { player1.removePoints(num_points) }
@@ -138,14 +143,27 @@ Item {
 			}
 	}
 
+	InstructionsScreen {
+		id: instructions
+		focus: false
+		width: parent.width
+		height: parent.height
+		background_color: Material.background
+		go_back_visible: false
+		//go_back_text: "Return to Menu"
+		//onGoBack: { root.returnToMenu() }
+		onAfterDisappear: { instructions.focus = false; client.sendReady() }
+	}
+
 	GameOverMenu {
 		id: gameOverMenu
 		width: parent.width
 		height: parent.height
 		backgroundColor: Material.background
+		quit_button_text: "Back to Lobby"
 		onQuitButtonPressed: { lobby.appear() }
 
-		onAfterDisappear: { root.start() }
+		onAfterAppear: { instructions.appear() }
 	}
 
 	Lobby {
@@ -156,14 +174,17 @@ Item {
 		username: root.username
 		score: root.score
 		online_players: root.online_players
+		leaderboard: root.leaderboard
 
-		onAcceptChallenge: { client.acceptChallenge(); lobby.disappear() }
+		onAcceptChallenge: { client.acceptChallenge() }
 		onDeclineChallenge: { client.declineChallenge() }
 
 		onReturnToMenu: { root.returnToMenu() }
-		onRefreshPlayers: { client.getOnlinePlayers() } //; client.sendChallenge(6) }
+		onRefreshPlayers: { client.getOnlinePlayers() }
 		onSendChallenge: { client.sendChallenge(player_id) }
-		onAfterDisappear: { player1.startGame(); player2.startGame() }
+		onSetUsername: { root.opponent_username = username }
+		onAfterAppear: { gameOverMenu.disappearNow() }
+		onAfterDisappear: { instructions.focus = true; gameOverMenu.disappearNow() }
 	}
 
 	LoginMenu {

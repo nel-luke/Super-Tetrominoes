@@ -3,7 +3,7 @@ import QtQuick.Controls.Material 2.15
 
 Item {
 	readonly property int borderSize: 1
-	property variant gridColors: [
+	property var gridColors: [
 		Material.color(Material.Grey, Material.Shade300),
 		Material.color(Material.Grey, Material.Shade400)
 	]

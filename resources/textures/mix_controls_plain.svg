@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="110.06652mm"
+   height="84.666702mm"
+   version="1.1"
+   viewBox="0 0 110.06652 84.666702"
+   id="svg8"
+   sodipodi:docname="mix_controls_plain.svg"
+   inkscape:version="1.0.2 (e86c870879, 2021-01-15, custom)">
+  <metadata
+     id="metadata14">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs12" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     id="namedview10"
+     showgrid="false"
+     inkscape:pagecheckerboard="true"
+     inkscape:zoom="0.75722503"
+     inkscape:cx="208.00006"
+     inkscape:cy="160.00006"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg8" />
+  <g
+     fill="none"
+     stroke="#ffffff"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     stroke-width="8.4667"
+     id="g6"
+     transform="translate(-49.96665,-106.16665)">
+    <path
+       d="m 143.1,161.2 12.7,12.7 -12.7,12.7 m 0,-76.2 12.7,12.7 -12.7,12.7 m -88.9,38.1 h 22.54 a 21.167,21.167 0 0 0 17.611,-9.4245 L 105,148.4995"
+       id="path2" />
+    <path
+       d="m 58.433,123.1 h 22.54 a 21.167,21.167 0 0 1 17.611,9.4245 l 21.299,31.951 a 21.167,21.167 0 0 0 17.611,9.4245 h 14.073 m 0,-50.8 h -14.073 a 21.167,21.167 0 0 0 -17.611,9.4245 l -2.1828,3.2755"
+       id="path4" />
+  </g>
+</svg>

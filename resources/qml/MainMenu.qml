@@ -24,36 +24,50 @@ Item {
 		anchors.fill: parent
 	}
 
+	Label {
+		width: parent.width * 0.8
+		height: parent.height * 0.25
+		y: parent.height * 0.1
+		anchors.horizontalCenter: parent.horizontalCenter
+		horizontalAlignment: Text.AlignHCenter
+		font.bold: true
+		fontSizeMode: Text.HorizontalFit
+		font.pointSize: 128
+		color: "white"
+		text: "Super Tetrominoes"
+	}
+
 	ColumnLayout {
 		id: mainButtons
-		spacing: 2
-		y: parent.height/2 - height/2
 		width: parent.width/3
 		anchors.horizontalCenter: parent.horizontalCenter
+		y: parent.height/2 - height/2
+		spacing: 2
 
 		Button {
 			text: "Play Split-Screen"
-			Layout.fillHeight: true
 			Layout.fillWidth: true
+			Layout.fillHeight: true
 			onClicked: { root.localMultiplayerPressed() }
 		}
 
 		Button {
 			text: "Play Online"
-			Layout.fillHeight: true
 			Layout.fillWidth: true
+			Layout.fillHeight: true
 			onClicked: { root.onlineMultiplayerPressed() }
 		}
 
 		Button {
 			text: "Credits"
-			Layout.fillHeight: true
 			Layout.fillWidth: true
+			Layout.fillHeight: true
 		}
 
 		Button {
 			text: "Quit"
 			Layout.fillWidth: true
+			Layout.fillHeight: true
 			onClicked: quitButtonPressed()
 		}
 	}

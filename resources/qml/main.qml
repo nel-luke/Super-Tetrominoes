@@ -4,13 +4,15 @@ import QtQuick.Controls.Material 2.15
 import QtQuick.Window 2.15
 import QtMultimedia 5.15
 
+import QtGraphicalEffects 1.15
+
 import "qrc:/qml/components"
 import "qrc:/qml/types"
 
 Window {
 	id: windowRoot
 	visible: true
-	width: 860 //1920
+	width: 960 //1920
 	height: 1000
 	visibility: Qt.WindowMaximized
 	title: qsTr("Super Tetrominoes")
@@ -53,4 +55,5 @@ Window {
 			onAfterDisappear: { loader.item.start() }
 			onAfterAppear: { loader.deactivate() }
 	}
+
 }

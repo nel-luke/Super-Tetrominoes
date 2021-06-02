@@ -19,6 +19,13 @@
         <file>LoginMenu.qml</file>
         <file>OnlinePlayerRow.qml</file>
         <file>Lobby.qml</file>
+        <file>GetChallengeDialog.qml</file>
+        <file>InstructionsScreen.qml</file>
+        <file>OnlinePlayers.qml</file>
+        <file>Leaderboard.qml</file>
+        <file>LeaderboardRow.qml</file>
+        <file>SendChallengeDialog.qml</file>
+        <file>WaitingScreen.qml</file>
     </qresource>
     <qresource prefix="/">
         <file>qtquickcontrols2.conf</file>

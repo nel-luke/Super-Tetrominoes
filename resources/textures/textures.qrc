@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/textures/" >
-        <file>mix_controls.png</file>
-        <file>repeat_shape.png</file>
+        <file>mix_controls_plain.svg</file>
+        <file>repeat_shape_plain.svg</file>
     </qresource>
 </RCC>

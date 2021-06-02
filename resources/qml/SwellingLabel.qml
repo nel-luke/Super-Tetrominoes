@@ -5,7 +5,7 @@ Label {
 	id: root
 	state: "deactivated"
 
-	required property real fontSize
+	property real font_size
 
 	function activate() { root.state = "activated" }
 
@@ -14,11 +14,11 @@ Label {
 	states: [
 		State {
 			name: "deactivated"
-			PropertyChanges {	target: root; font.pointSize: root.fontSize	}
+			PropertyChanges {	target: root; font.pointSize: root.font_size	}
 		},
 		State {
 			name: "activated"
-			PropertyChanges { target: root; font.pointSize: root.fontSize*1.25 }
+			PropertyChanges { target: root; font.pointSize: root.font_size * 1.25 }
 		}
 	]
 

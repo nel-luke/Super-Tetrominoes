@@ -6,14 +6,16 @@ Item {
 	state: "retracted"
 
 	property alias backgroundColor: background.color
+	property alias quit_button_text: quitButton.text
 
 	function disappear() { root.state = "retracted" }
+	function disappearNow() { root.state = ""; root.disappear() }
 	function appear(message) { bigText.text = message; root.state = "visible" }
 
 	signal retryButtonPressed()
 	signal quitButtonPressed()
 
-	signal afterDisappear()
+	signal afterAppear()
 
 	Rectangle {
 		id: background
@@ -32,7 +34,7 @@ Item {
 		}
 
 		Button {
-			text: "Quit to Menu"
+			id: quitButton
 			onClicked: quitButtonPressed()
 		}
 	}
@@ -51,7 +53,6 @@ Item {
 		Transition {
 				from: "visible"; to: "retracted"
 				SequentialAnimation {
-						ScriptAction { script: { root.afterDisappear() } }
 						NumberAnimation { properties: "y"; easing.type: Easing.InOutQuad; duration: 500 }
 						PropertyAnimation { properties: "visible, focus" }
 				}
@@ -61,6 +62,7 @@ Item {
 			SequentialAnimation {
 				PropertyAnimation { properties: "visible, focus" }
 				NumberAnimation { properties: "y"; easing.type: Easing.InOutQuad; duration: 500 }
+				ScriptAction { script: { root.afterAppear() } }
 			}
 		}
 	]

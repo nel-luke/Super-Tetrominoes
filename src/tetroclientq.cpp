@@ -1,9 +1,17 @@
 #include "tetroclientq.h"
 
 TetroClientQ::TetroClientQ(QObject *parent) :
-		QObject(parent), manager(new QNetworkAccessManager(this)),
-		control_log(), control_queue(), next_control_number(0) {
+		QObject(parent),
+		manager(new QNetworkAccessManager(this)),
+		control_log(),
+		control_queue(),
+		next_control_number(0),
+		control_timer_id(0),
+		packet_is_lost(false),
+		ready_timer_id(0),
+		win_timer_id(0) {
 	connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(getReply(QNetworkReply*)));
+
 }
 
 void TetroClientQ::sendData(const QString& message_type, QJsonObject&& data) const {
@@ -37,25 +45,55 @@ QList<QVariantMap> TetroClientQ::makeList(const QJsonArray&& values) const {
 }
 
 void TetroClientQ::handleLoginSuccessful(QJsonObject&& data) const {
-	emit loginSuccessful(data["username"].toString(), data["score"].toString().toUInt());
+	emit loginSuccessful(data["username"].toString());
+	handlePlayerListReady(std::move(data));
 }
 
-void TetroClientQ::handleControl(QJsonArray&& data) {
-
+void TetroClientQ::appendControls(QJsonArray&& data) {
 	QVector<QJsonObject> list(data.size());
 	std::transform(data.begin(), data.end(), list.begin(),
 								 [](const QJsonValue& a) { return a.toObject(); });
 
-	control_queue.append(list);
+	control_queue.append(std::move(list));
+
+	control_queue.erase( std::unique( control_queue.begin(), control_queue.end(),
+		[](const QJsonObject& a, const QJsonObject& b) -> bool {
+			return a["control_number"].toInt() == b["control_number"].toInt(); } ), control_queue.end() );
+
 	std::sort(control_queue.begin(), control_queue.end(),
 						[](const QJsonObject& a, const QJsonObject& b) -> bool {
-		return a["control_number"].toInt() < b["control_number"].toInt(); });
+			return a["control_number"].toInt() < b["control_number"].toInt(); });
 
-//	list.erase( std::unique( list.begin(), list.end(),
-//			[](const QJsonObject& a, const QJsonObject& b) -> bool {
-//		return a["control_number"].toInt() == b["control_number"].toInt(); } ), list.end() );
+	control_queue.erase(control_queue.begin(), std::lower_bound( control_queue.begin(),
+		control_queue.end(), next_control_number, [](const QJsonObject& a, int val) -> bool {
+		int t = a["control_number"].toInt();
+		return (t != -1) && (t < val); } ) );
 
-	while (!control_queue.isEmpty()) {
+	if (control_timer_id == 0) {
+		handleControl();
+
+		if (!control_queue.isEmpty() && !packet_is_lost) {
+			control_timer_id = startTimer(15);
+			qInfo() << "Starting timer " << control_timer_id;
+		}
+	}
+}
+
+void TetroClientQ::handlePlayerListReady(QJsonObject&& data) const {
+	int score = data["score"].toString().toUInt();
+	auto online_players = makeList(std::move(data["online_players"].toArray()));
+	auto leaderboard = makeList(std::move(data["leaderboard"].toArray()));
+	emit playerListReady(score, online_players, leaderboard);
+}
+
+void TetroClientQ::handleControl() {
+	if (control_queue.isEmpty()) {
+		if (control_timer_id != 0) {
+			killTimer(control_timer_id);
+			qInfo() << "Stopping timer " << control_timer_id;
+			control_timer_id = 0;
+		}
+	} else {
 		int control_number = control_queue[0]["control_number"].toInt();
 
 		if (control_number == -1) {
@@ -70,20 +108,31 @@ void TetroClientQ::handleControl(QJsonArray&& data) {
 			sendData("Control", std::move(json));
 
 			control_queue.pop_front();
-			continue;
+			handleControl();
+			return;
 		} else if (control_number < next_control_number) {
 			qInfo() << "Duplicate skipped";
 			control_queue.pop_front();
-			continue;
+			handleControl();
+			return;
 		} else if (control_number > next_control_number) {
 			qInfo() << "Packet " << next_control_number << " Lost!";
 			QJsonObject json;
 			json["control_number"] = -1;
-			//json["control_name"] = RepeatControl;
 			json["args"] = next_control_number;
 			sendData("Control", std::move(json));
-			break;
+
+			packet_is_lost = true;
+
+			if (control_timer_id != 0) {
+				qInfo() << "Lost stopped timer " << control_timer_id;
+				killTimer(control_timer_id);
+				control_timer_id = 0;
+			}
+			return;
 		}
+
+		packet_is_lost = false;
 
 		qInfo() << "Control number " << control_number;
 		QVariantList args = control_queue[0]["args"].toArray().toVariantList();
@@ -102,7 +151,7 @@ void TetroClientQ::handleControl(QJsonArray&& data) {
 				break;
 			case GetSpecial: emit getGetSpecial(args[0].toUInt());
 				break;
-			case WinGame: emit getWinGame();
+			case WinGame: emit getWinGame(); control_log.clear(); sendData("Terminate");
 				break;
 			case SpawnShape: emit getSpawnShape(args[0].toUInt(), args[1].toString());
 				break;
@@ -113,6 +162,34 @@ void TetroClientQ::handleControl(QJsonArray&& data) {
 
 		control_queue.pop_front();
 		next_control_number++;
+	}
+}
+
+void TetroClientQ::handleOpponentReady() {
+	if (ready_timer_id != 0) {
+		killTimer(ready_timer_id);
+		ready_timer_id = 0;
+		emit startGame();
+	}
+}
+
+
+void TetroClientQ::handleTerminated() {
+	if (win_timer_id != 0) {
+		killTimer(win_timer_id);
+		win_timer_id = 0;
+	}
+	control_log.clear();
+}
+
+void TetroClientQ::timerEvent(QTimerEvent* event) {
+	int event_id = event->timerId();
+	if (event_id == control_timer_id) {
+		handleControl();
+	} else if (event_id == ready_timer_id) {
+		sendData("Ready");
+	} else if (event_id == win_timer_id) {
+		sendControl(WinGame);
 	}
 }
 
@@ -155,11 +232,8 @@ void TetroClientQ::getReply(QNetworkReply *reply) {
 			emit loginFail();
 			break;
 
-		case OnlinePlayers:
-			emit onlinePlayersReady(makeList(json["data"].toArray()));
-			break;
-		case Leaderboard:
-			emit leaderboardReady(makeList(json["data"].toArray()));
+		case PlayerList:
+			handlePlayerListReady(json["data"].toObject());
 			break;
 
 		case ChallengeSent:
@@ -180,11 +254,15 @@ void TetroClientQ::getReply(QNetworkReply *reply) {
 			break;
 
 		case Control:
-			handleControl(json["data"].toArray());
+			handleOpponentReady();
+			appendControls(json["data"].toArray());
 			break;
-		//case RepeatControl:
-		//	handleRepeatControl(json["data"].toString().toInt());
-		//	break;
+		case OpponentReady:
+			handleOpponentReady();
+			break;
+		case Terminated:
+			handleTerminated();
+			break;
 
 		default:
 			qInfo() << "Error: Missing case for response code " << json["type"].toInt();
@@ -192,3 +270,21 @@ void TetroClientQ::getReply(QNetworkReply *reply) {
 	}
 }
 
+void TetroClientQ::sendReady() {
+	sendData("Ready");
+	if (ready_timer_id == 0) {
+		ready_timer_id = startTimer(50);
+	}
+}
+
+void TetroClientQ::sendWinGame() {
+	QJsonObject json;
+	json["control_number"] = control_log.size();
+	json["control_name"] = WinGame;
+
+	sendData("Control", std::move(json));
+
+	if (win_timer_id == 0) {
+		win_timer_id = startTimer(50);
+	}
+}
