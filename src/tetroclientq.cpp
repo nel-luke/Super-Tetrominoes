@@ -74,7 +74,7 @@ void TetroClientQ::appendControls(QJsonArray&& data) {
 
 		if (!control_queue.isEmpty() && !packet_is_lost) {
 			control_timer_id = startTimer(15);
-			qInfo() << "Starting timer " << control_timer_id;
+			//qDebug() << "Starting timer " << control_timer_id;
 		}
 	}
 }
@@ -90,7 +90,7 @@ void TetroClientQ::handleControl() {
 	if (control_queue.isEmpty()) {
 		if (control_timer_id != 0) {
 			killTimer(control_timer_id);
-			qInfo() << "Stopping timer " << control_timer_id;
+			//qDebug() << "Stopping timer " << control_timer_id;
 			control_timer_id = 0;
 		}
 	} else {
@@ -98,7 +98,7 @@ void TetroClientQ::handleControl() {
 
 		if (control_number == -1) {
 			int to_send = control_queue[0]["args"].toInt();
-			qInfo() << "Sending control " << to_send;
+			//qDebug() << "Sending control " << to_send;
 			control a = control_log[to_send];
 
 			QJsonObject json;
@@ -111,12 +111,12 @@ void TetroClientQ::handleControl() {
 			handleControl();
 			return;
 		} else if (control_number < next_control_number) {
-			qInfo() << "Duplicate skipped";
+			//qDebug() << "Duplicate skipped";
 			control_queue.pop_front();
 			handleControl();
 			return;
 		} else if (control_number > next_control_number) {
-			qInfo() << "Packet " << next_control_number << " Lost!";
+			//qDebug() << "Packet " << next_control_number << " Lost!";
 			QJsonObject json;
 			json["control_number"] = -1;
 			json["args"] = next_control_number;
@@ -125,7 +125,7 @@ void TetroClientQ::handleControl() {
 			packet_is_lost = true;
 
 			if (control_timer_id != 0) {
-				qInfo() << "Lost stopped timer " << control_timer_id;
+				//qDebug() << "Lost stopped timer " << control_timer_id;
 				killTimer(control_timer_id);
 				control_timer_id = 0;
 			}
@@ -134,7 +134,7 @@ void TetroClientQ::handleControl() {
 
 		packet_is_lost = false;
 
-		qInfo() << "Control number " << control_number;
+		//qDebug() << "Control number " << control_number;
 		QVariantList args = control_queue[0]["args"].toArray().toVariantList();
 
 		switch (control_queue[0]["control_name"].toInt()) {
@@ -182,6 +182,24 @@ void TetroClientQ::handleTerminated() {
 	control_log.clear();
 }
 
+void TetroClientQ::handleDisconnected() {
+	if (win_timer_id != 0) {
+		killTimer(win_timer_id);
+		win_timer_id = 0;
+	}
+	if (ready_timer_id != 0) {
+		killTimer(ready_timer_id);
+		ready_timer_id = 0;
+	}
+	if (control_timer_id != 0) {
+		killTimer(control_timer_id);
+		control_timer_id = 0;
+	}
+	control_queue.clear();
+	control_log.clear();
+	emit disconnected();
+}
+
 void TetroClientQ::timerEvent(QTimerEvent* event) {
 	int event_id = event->timerId();
 	if (event_id == control_timer_id) {
@@ -219,10 +237,10 @@ void TetroClientQ::getReply(QNetworkReply *reply) {
 		case Success:
 			break;
 		case Error:
-			qInfo() << "Error: " << json["data"].toString();
+			//qDebug() << "Error: " << json["data"].toString();
 			break;
 		case Debug:
-			qInfo() << "Debug: " << json["data"].toString();
+			//qInfo() << "Debug: " << json["data"].toString();
 			break;
 
 		case LoginSuccess:
@@ -244,7 +262,7 @@ void TetroClientQ::getReply(QNetworkReply *reply) {
 			break;
 
 		case Disconnected:
-			emit disconnected();
+			handleDisconnected();
 			break;
 		case ChallengeAccepted:
 			emit challengeAccepted();
@@ -265,7 +283,7 @@ void TetroClientQ::getReply(QNetworkReply *reply) {
 			break;
 
 		default:
-			qInfo() << "Error: Missing case for response code " << json["type"].toInt();
+			//qInfo() << "Error: Missing case for response code " << json["type"].toInt();
 			break;
 	}
 }

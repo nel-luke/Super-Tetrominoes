@@ -83,7 +83,7 @@ Item {
 			case Qt.Key_D : player1.keyRight(); client.sendKeyRight()
 				break;
 
-			case Qt.Key_Q : player1.debug ^= 1; client.sendDebug(player1.debug)
+			case Qt.Key_Q : if (player1.debug_enabled) { player1.debug ^= 1; client.sendDebug(player1.debug) }
 				break;
 
 			default: ;

@@ -27,7 +27,7 @@ Page {
 			case Qt.Key_D : player1.keyRight();
 				break;
 
-			case Qt.Key_Q : player1.debug ^= 1; player2.debug = !player1.debug
+			case Qt.Key_Q : if (player1.debug_enabled) { player1.debug ^= 1; player2.debug = !player1.debug }
 				break
 
 			case Qt.Key_Up : player2.keyUp();
@@ -80,7 +80,7 @@ Page {
 				width: parent.width < parent.height ? parent.width : parent.width/2
 				height: parent.width < parent.height ? parent.height/2 : parent.height
 
-				debug: true
+				debug: player2.debug_enabled
 				//onSetFocus: { background.focus = true }
 				onGetPoints: { player1.removePoints(num_points) }
 				onSendSpecial: { player1.getSpecial(special_type) }

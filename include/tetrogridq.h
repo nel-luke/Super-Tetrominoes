@@ -25,6 +25,7 @@ class TetroGridQ : public QAbstractTableModel
 	Q_PROPERTY(unsigned int rows READ rowCount WRITE setRows NOTIFY rowsChanged)
 	Q_PROPERTY(unsigned int columns READ columnCount WRITE setColumns NOTIFY columnsChanged)
 	Q_PROPERTY(unsigned int numShapes READ getNumShapes)
+	Q_PROPERTY(bool debug_enabled READ getDebug)
 public:
 	//enum SpecialType : short;
 private:
@@ -57,6 +58,9 @@ private:
 	std::vector<std::vector<block_info>> matrix;
 	std::vector<QGenericMatrix<4, 2, unsigned short>> shapes;
 	int new_shape_id;
+
+	bool debug_enabled;
+	bool getDebug() { return debug_enabled; }
 
 	std::vector<block_vertex> findShapeVertices(unsigned int shape_id) const;
 //	boundary findBoundary(unsigned int shape_id) const;

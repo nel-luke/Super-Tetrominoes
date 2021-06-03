@@ -4,8 +4,10 @@
 TetroGridQ::TetroGridQ(QObject* parent):
 		QAbstractTableModel(parent),
 		matrix(2, std::vector<block_info>(4, block_info())),
-		new_shape_id(1) {
-
+		new_shape_id(1), debug_enabled(false) {
+	#ifdef QT_DEBUG
+		debug_enabled = true;
+	#endif
 	for (int i = 0; i < numShapes; ++i) {
 		shapes.push_back(QGenericMatrix<4, 2, unsigned short>(c_shapes[i]));
 	}

@@ -39,6 +39,7 @@ Item {
 
 	property bool dummy: false
 
+	property alias debug_enabled: data.debug_enabled
 	property bool debug: false
 	onDebugChanged: { playerTimer.running = !(root.debug || root.dummy) }
 

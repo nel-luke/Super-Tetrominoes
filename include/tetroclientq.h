@@ -85,6 +85,7 @@ private:
 	void handleControl();
 	void handleOpponentReady();
 	void handleTerminated();
+	void handleDisconnected();
 
 protected:
 	void timerEvent(QTimerEvent * event) override;
