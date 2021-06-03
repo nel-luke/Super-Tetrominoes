@@ -14,7 +14,7 @@
 #include <cstdlib>
 #include <ctime>
 
-typedef std::vector<std::vector<bool>> BoolMatrix;
+//typedef std::vector<std::vector<bool>> BoolMatrix;
 
 
 class TetroGridQ : public QAbstractTableModel
@@ -26,9 +26,9 @@ class TetroGridQ : public QAbstractTableModel
 	Q_PROPERTY(unsigned int columns READ columnCount WRITE setColumns NOTIFY columnsChanged)
 	Q_PROPERTY(unsigned int numShapes READ getNumShapes)
 public:
-	enum SpecialType : short;
+	//enum SpecialType : short;
 private:
-	enum BlockProps {
+	enum BlockBorder {
 		BorderNone = 0,
 		BorderLeft = 1,
 		BorderRight = 2,
@@ -36,28 +36,35 @@ private:
 		BorderBottom = 8
 	};
 
-	struct block {
+	struct block_info {
 		unsigned int id;
 		QColor color;
-		unsigned int borders;
+		unsigned short borders;
 	};
 
-	struct boundary {
-		unsigned int ax;
-		unsigned int ay;
-		unsigned int bx;
-		unsigned int by;
+	struct block_vertex {
+		int y;
+		int x;
 	};
 
-	std::vector<std::vector<block>> matrix;
-	std::vector<QGenericMatrix<4, 2, unsigned int>> shapes;
+//	struct boundary {
+//		unsigned int ax;
+//		unsigned int ay;
+//		unsigned int bx;
+//		unsigned int by;
+//	};
+
+	std::vector<std::vector<block_info>> matrix;
+	std::vector<QGenericMatrix<4, 2, unsigned short>> shapes;
 	int new_shape_id;
 
-	boundary findBoundary(unsigned int shape_id) const;
-	BoolMatrix findShape(unsigned int shape_id, const boundary& b, bool negate = false) const;
-	BoolMatrix rotateMatrix(const BoolMatrix& A, bool counter = false) const;
-	bool dotMatrix(const BoolMatrix& A, const BoolMatrix& B) const;
-	bool rotateShapeHelper(unsigned int shape_id, bool counter);
+	std::vector<block_vertex> findShapeVertices(unsigned int shape_id) const;
+//	boundary findBoundary(unsigned int shape_id) const;
+//	BoolMatrix findShape(unsigned int shape_id, const boundary& b, bool negate = false) const;
+//	BoolMatrix rotateMatrix(const BoolMatrix& A, bool counter = false) const;
+//	bool dotMatrix(const BoolMatrix& A, const BoolMatrix& B) const;
+//	bool rotateShapeHelper(unsigned int shape_id, bool counter);
+
 
 public:
 	enum DataTypes {
@@ -78,9 +85,9 @@ public:
 	Q_INVOKABLE bool moveShapeLeft(unsigned int shape_id);
 	Q_INVOKABLE bool moveShapeRight(unsigned int shape_id);
 	Q_INVOKABLE bool moveShapeDown(unsigned int shape_id);
-	Q_INVOKABLE bool moveShapeUp(unsigned int shape_id);
+	//Q_INVOKABLE bool moveShapeUp(unsigned int shape_id);
 	Q_INVOKABLE bool rotateShape(unsigned int shape_id);
-	Q_INVOKABLE bool c_rotateShape(unsigned int shape_id);
+	//Q_INVOKABLE bool c_rotateShape(unsigned int shape_id);
 	Q_INVOKABLE std::vector<int> checkRows();
 	Q_INVOKABLE void deleteRow(unsigned int index);
 	Q_INVOKABLE void reset();
@@ -128,14 +135,9 @@ public:
 
 			~TetroGridQ() {};
 
-public slots:
-		void makeSnapshot();
-
 signals:
 		void rowsChanged();
 		void columnsChanged();
-
-		void sendSnapshot();
 };
 
 #endif // TETROGRIDQ_H

@@ -1,14 +1,14 @@
 #include "../include/tetrogridq.h"
 #include "../include/c_shapes.h"
 
-TetroGridQ::TetroGridQ(QObject* parent) : QAbstractTableModel(parent), matrix(1), new_shape_id(1) {
-	matrix[0].push_back({});
+TetroGridQ::TetroGridQ(QObject* parent):
+		QAbstractTableModel(parent),
+		matrix(2, std::vector<block_info>(4, block_info())),
+		new_shape_id(1) {
 
 	for (int i = 0; i < numShapes; ++i) {
-		shapes.push_back(QGenericMatrix<4, 2, unsigned int>(c_shapes[i]));
+		shapes.push_back(QGenericMatrix<4, 2, unsigned short>(c_shapes[i]));
 	}
-
-	srand(time(NULL));
 }
 
 void TetroGridQ::setRows(unsigned int count) {
@@ -99,7 +99,7 @@ auto TetroGridQ::flags(const QModelIndex& /*index*/) const
 bool TetroGridQ::insertRows(int before_row, int count, const QModelIndex& parent) {
 		beginInsertRows(parent, before_row + 1, before_row + count);
 		matrix.insert(matrix.begin() + before_row, count,
-									std::vector<block>(getColumns(), block()));
+									std::vector<block_info>(getColumns(), block_info()));
 		endInsertRows();
 		return true;
 }
@@ -129,205 +129,189 @@ bool TetroGridQ::removeColumns(int from_column, int count, const QModelIndex &pa
 		return true;
 }
 
+std::vector<TetroGridQ::block_vertex> TetroGridQ::findShapeVertices(unsigned int shape_id) const {
+	std::vector<block_vertex> vertices;
+	for (int i = 0; i < int(getRows()); ++i) {
+		for (int j = 0; j < int(getColumns()); ++j) {
+			if (matrix[i][j].id == shape_id) {
+				vertices.push_back({ i, j });
+			}
+		}
+	}
+
+	return vertices;
+}
+
 // Slots
 int TetroGridQ::spawnShape(unsigned int shape_type, QColor color) {
 	shape_type = qMin(getNumShapes()-1, shape_type);
-	QGenericMatrix<4, 2, unsigned int> current_shape = shapes[shape_type];
+	QGenericMatrix<4, 2, unsigned short> shape_borders = shapes[shape_type];
 
-	unsigned int point = 0;
-	point = (unsigned int)floor(getColumns()/2);
-
-	boundary spawn_point = { point-2, 0, point+1, 1 };
-
-	BoolMatrix shape(2, std::vector<bool>(4, 0));
+	bool blocks_present = false;
 	for (int i = 0; i < 2; ++i) {
-		for (int j = 0; j < 4; ++j) {
-			shape.at(i).at(j) = bool(current_shape(i, j));
+		for (const auto& block : matrix[i]) {
+			blocks_present |= block.id;
 		}
 	}
 
-	BoolMatrix test = findShape(new_shape_id, spawn_point, true);
-
-
-	if (dotMatrix(shape, test) == 0) {
+	int x_start = floor(getColumns()/2) - 1;
+	if (!blocks_present) {
 		unsigned int shape_id = new_shape_id++;
 		for (int i = 0; i < 2; ++i) {
 			for (int j = 0; j < 4; ++j) {
-				if (current_shape(i, j)) {
-					matrix.at(spawn_point.ay + i).at(spawn_point.ax + j) = { shape_id, color, current_shape(i, j) };
+				if (shape_borders(i, j)) {
+					matrix[i][x_start + j] = { shape_id, color, shape_borders(i, j) };
 				}
 			}
 		}
 
-		emit dataChanged(createIndex(spawn_point.ay, spawn_point.ax),
-										 createIndex(spawn_point.by, spawn_point.bx), {});
+		emit dataChanged(createIndex(0, x_start), createIndex(1, x_start+4), {});
 		return shape_id;
-	} else {
-		return -1;
 	}
+
+	return -1;
 }
 
 bool TetroGridQ::moveShapeLeft(unsigned int shape_id) {
-	// Boundary given in x y coordinates
-	// matrix is y x
-
 	if (shape_id == 0)
 		return false;
 
-	boundary shape_boundary = findBoundary(shape_id);
+	std::vector<block_vertex> vertices = findShapeVertices(shape_id);
 
-	if (shape_boundary.ax == 0)
-		return false;
+	bool can_move = true;
+	for (const auto& v : vertices) {
+		can_move &= (v.x > 0 && (matrix[v.y][v.x-1].id == 0	|| matrix[v.y][v.x-1].id == shape_id) );
+	}
 
-	BoolMatrix shape = findShape(shape_id, shape_boundary);
-
-	boundary test_boundary = shape_boundary;
-	test_boundary.ax -= 1;
-	test_boundary.bx -= 1;
-	BoolMatrix test = findShape(shape_id, test_boundary, true);
-
-	if (dotMatrix(shape, test) == 0) {
-		for (unsigned int i = shape_boundary.ay; i <= shape_boundary.by; ++i) {
-			for (unsigned int j = shape_boundary.ax; j <= shape_boundary.bx; ++j) {
-				if (matrix.at(i).at(j).id == shape_id) {
-					matrix.at(i).at(j-1) = matrix.at(i).at(j);
-					matrix.at(i).at(j) = {0, QColor(0, 0, 0), BorderNone};
-				}
-			}
+	if (can_move) {
+		for (const auto& v : vertices) {
+			block_info b = matrix[v.y][v.x];
+			matrix[v.y][v.x-1] = b;
+			matrix[v.y][v.x] = { 0, QColor(0, 0, 0), BorderNone };
 		}
 
-		emit dataChanged(createIndex(test_boundary.ay, test_boundary.ax), createIndex(shape_boundary.by, shape_boundary.bx), {});
+		block_vertex a = { qMax(vertices[2].y-3, 0), qMax(vertices[2].x-3, 0) };
+		block_vertex b = { qMin(vertices[2].y+3, int(getRows()-1)), qMin(vertices[2].x+3, int(getColumns()-1)) };
+		emit dataChanged(createIndex(a.y, a.x), createIndex(b.y, b.x), {});
 		return true;
-	} else {
-		return false;
 	}
+
+	return false;
 }
 
 bool TetroGridQ::moveShapeRight(unsigned int shape_id) {
-	// Boundary given in x y coordinates
-	// matrix is y x
-
 	if (shape_id == 0)
 		return false;
 
-	boundary shape_boundary = findBoundary(shape_id);
+	std::vector<block_vertex> vertices = findShapeVertices(shape_id);
 
-	if (shape_boundary.bx == getColumns()-1)
-		return false;
+	bool can_move = true;
+	for (const auto& v : vertices) {
+		can_move &= (v.x < int(getColumns()-1) && (matrix[v.y][v.x+1].id == 0	|| matrix[v.y][v.x+1].id == shape_id) );
+	}
 
-	BoolMatrix shape = findShape(shape_id, shape_boundary);
-
-	boundary test_boundary = shape_boundary;
-	test_boundary.ax += 1;
-	test_boundary.bx += 1;
-	BoolMatrix test = findShape(shape_id, test_boundary, true);
-
-	if (dotMatrix(shape, test) == 0) {
-		for (unsigned int i = shape_boundary.by; i >= shape_boundary.ay; --i) {
-			for (unsigned int j = shape_boundary.bx; j >= shape_boundary.ax; --j) {
-				if (matrix.at(i).at(j).id == shape_id) {
-					matrix.at(i).at(j+1) = matrix.at(i).at(j);
-					matrix.at(i).at(j) = block();
-				}
-
-				if (j == 0)
-					break;
-			}
-
-			if (i == 0)
-				break;
+	if (can_move) {
+		std::reverse(vertices.begin(), vertices.end());
+		for (const auto& v : vertices) {
+			block_info b = matrix[v.y][v.x];
+			matrix[v.y][v.x+1] = b;
+			matrix[v.y][v.x] = { 0, QColor(0, 0, 0), BorderNone };
 		}
 
-		emit dataChanged(createIndex(shape_boundary.ay, shape_boundary.ax), createIndex(test_boundary.by, test_boundary.bx), {});
+		block_vertex a = { qMax(vertices[2].y-3, 0), qMax(vertices[2].x-3, 0) };
+		block_vertex b = { qMin(vertices[2].y+3, int(getRows()-1)), qMin(vertices[2].x+3, int(getColumns()-1)) };
+		emit dataChanged(createIndex(a.y, a.x), createIndex(b.y, b.x), {});
 		return true;
-	} else {
-		return false;
 	}
+
+	return false;
 }
 
 bool TetroGridQ::moveShapeDown(unsigned int shape_id) {
-	// Boundary given in x y coordinates
-	// matrix is y x
 	if (shape_id == 0)
 		return false;
 
-	boundary shape_boundary = findBoundary(shape_id);
+	std::vector<block_vertex> vertices = findShapeVertices(shape_id);
 
-	if (shape_boundary.by == getRows()-1)
-		return false;
+	bool can_move = true;
+	for (const auto& v : vertices) {
+		can_move &= (v.y < int(getRows()-1) && (matrix[v.y+1][v.x].id == 0	|| matrix[v.y+1][v.x].id == shape_id) );
+	}
 
-	BoolMatrix shape = findShape(shape_id, shape_boundary);
-
-	boundary test_boundary = shape_boundary;
-	test_boundary.ay += 1;
-	test_boundary.by += 1;
-	BoolMatrix test = findShape(shape_id, test_boundary, true);
-
-	if (dotMatrix(shape, test) == 0) {
-		for (unsigned int i = shape_boundary.by; i >= shape_boundary.ay; --i) {
-			for (unsigned int j = shape_boundary.bx; j >= shape_boundary.ax; --j) {
-				if (matrix.at(i).at(j).id == shape_id) {
-					matrix.at(i+1).at(j) = matrix.at(i).at(j);
-					matrix.at(i).at(j) = {0, QColor(0, 0, 0), BorderNone};
-				}
-
-				if (j == 0)
-					break;
-			}
-
-			if (i == 0)
-				break;
+	if (can_move) {
+		std::reverse(vertices.begin(), vertices.end());
+		for (const auto& v : vertices) {
+			block_info b = matrix[v.y][v.x];
+			matrix[v.y+1][v.x] = b;
+			matrix[v.y][v.x] = { 0, QColor(0, 0, 0), BorderNone };
 		}
 
-		emit dataChanged(createIndex(shape_boundary.ay, shape_boundary.ax), createIndex(test_boundary.by, test_boundary.bx), {});
+		block_vertex a = { qMax(vertices[2].y-3, 0), qMax(vertices[2].x-3, 0) };
+		block_vertex b = { qMin(vertices[2].y+3, int(getRows()-1)), qMin(vertices[2].x+3, int(getColumns()-1)) };
+		emit dataChanged(createIndex(a.y, a.x), createIndex(b.y, b.x), {});
 		return true;
-	} else {
-		return false;
 	}
-}
 
-bool TetroGridQ::moveShapeUp(unsigned int shape_id) {
-	// Boundary given in x y coordinates
-	// matrix is y x
-
-	if (shape_id == 0)
-		return false;
-
-	boundary shape_boundary = findBoundary(shape_id);
-
-	if (shape_boundary.ay == 0)
-		return false;
-
-	BoolMatrix shape = findShape(shape_id, shape_boundary);
-
-	boundary test_boundary = shape_boundary;
-	test_boundary.ay -= 1;
-	test_boundary.by -= 1;
-	BoolMatrix test = findShape(shape_id, test_boundary, true);
-
-	if (dotMatrix(shape, test) == 0) {
-		for (unsigned int i = shape_boundary.ay; i <= shape_boundary.by; ++i) {
-			for (unsigned int j = shape_boundary.ax; j <= shape_boundary.bx; ++j) {
-				if (matrix.at(i).at(j).id == shape_id) {
-					matrix.at(i-1).at(j) = matrix.at(i).at(j);
-					matrix.at(i).at(j) = {0, QColor(0, 0, 0), BorderNone};
-				}
-			}
-		}
-
-		emit dataChanged(createIndex(test_boundary.ay, test_boundary.ax), createIndex(shape_boundary.by, shape_boundary.bx), {});
-		return true;
-	} else {
-		return false;
-	}
+	return false;
 }
 
 bool TetroGridQ::rotateShape(unsigned int shape_id) {
-	return rotateShapeHelper(shape_id, false);
-}
+	if (shape_id == 0)
+		return false;
 
-bool TetroGridQ::c_rotateShape(unsigned int shape_id) {
-	return rotateShapeHelper(shape_id, true);
+	std::vector<block_vertex> vertices = findShapeVertices(shape_id);
+
+	block_vertex min = { int(getRows()), int(getColumns()) };
+	block_vertex max = { 0, 0 };
+	for (const auto& v : vertices) {
+		min = { qMin(min.y, v.y), qMin(min.x, v.x) };
+		max = { qMax(max.y, v.y), qMax(max.x, v.x) };
+	}
+
+	block_vertex mid = {
+		int(floor((double(min.y) + max.y + 1)/2)),
+		int(floor((double(min.x) + max.x)/2))
+	};
+
+	std::vector<block_vertex> rotated(vertices.size());
+	std::transform(vertices.begin(), vertices.end(), rotated.begin(),
+			[mid](block_vertex& a) { return block_vertex({ mid.y + (a.x - mid.x), mid.x - (a.y - mid.y) }); });
+
+	bool can_move = true;
+	for (const auto& v : rotated) {
+		can_move &= (v.y > 0 && v.y < int(getRows()));
+		can_move &= (v.x > 0 && v.x < int(getColumns()));
+		if (can_move)
+			can_move &= (matrix[v.y][v.x].id == 0 || matrix[v.y][v.x].id == shape_id);
+		else
+			break;
+	}
+
+	if (can_move) {
+		QColor color = matrix[vertices[0].y][vertices[0].x].color;
+
+		for (const auto& v : vertices) {
+			matrix[v.y][v.x] = { 0, QColor(0, 0, 0), BorderNone };
+		}
+		for (const auto& r : rotated) {
+			matrix[r.y][r.x] = { shape_id, color, BorderNone };
+		}
+		for (const auto& r : rotated) {
+			matrix[r.y][r.x].borders = (unsigned short)(
+				(((r.x > 0) && matrix[r.y][r.x-1].id != shape_id) ? 1 : 0)										<< 0 |
+				(((r.x < int(getColumns()-1)) && matrix[r.y][r.x+1].id != shape_id) ? 1 : 0)			<< 1 |
+				(((r.y > 0) && matrix[r.y-1][r.x].id != shape_id) ? 1 : 0)										<< 2 |
+				(((r.y < int(getRows()-1)) && matrix[r.y+1][r.x].id != shape_id) ? 1 : 0)	<< 3
+			);
+		}
+
+		block_vertex a = { qMax(vertices[2].y-3, 0), qMax(vertices[2].x-3, 0) };
+		block_vertex b = { qMin(vertices[2].y+3, int(getRows()-1)), qMin(vertices[2].x+3, int(getColumns()-1)) };
+		emit dataChanged(createIndex(a.y, a.x), createIndex(b.y, b.x), {});
+		return true;
+	}
+
+	return false;
 }
 
 void TetroGridQ::reset() {
@@ -344,11 +328,11 @@ void TetroGridQ::reset() {
 std::vector<int> TetroGridQ::checkRows() {
 	std::vector<int> rows;
 	for (unsigned int i = 0 ; i < getRows(); ++i) {
-		bool check = true;
-		for (unsigned int j = 0; j < getColumns(); ++j) {
-			check &= matrix.at(i).at(j).id != 0 ? 1 : 0;
+		bool no_empties = true;
+		for (unsigned int j = 0; (j < getColumns()) && no_empties; ++j) {
+			no_empties &= matrix.at(i).at(j).id != 0;
 		}
-		if (check)
+		if (no_empties)
 			rows.push_back(i);
 	}
 	return rows;
@@ -384,128 +368,4 @@ void TetroGridQ::deleteRow(unsigned int index) {
 	}
 
 	emit dataChanged(createIndex(index,0), createIndex(qMin(index+1, getRows()),getColumns()), {});
-}
-
-TetroGridQ::boundary TetroGridQ::findBoundary(unsigned int shape_id) const {
-	boundary t = {99, 99, 0, 0};
-	for (unsigned int i = 0; i < getRows(); ++i) {
-		for (unsigned int j = 0; j < getColumns(); ++j) {
-			if (matrix.at(i).at(j).id == shape_id) {
-				t.ax = qMin(t.ax, j);
-				t.ay = qMin(t.ay, i);
-
-				t.bx = qMax(t.bx, j);
-				t.by = qMax(t.by, i);
-			}
-		}
-	}
-
-	return t;
-}
-
-BoolMatrix TetroGridQ::findShape(unsigned int shape_id, const boundary& b, bool negate) const {
-	unsigned int rows = b.by - b.ay + 1;
-	unsigned int columns = b.bx - b.ax + 1;
-	BoolMatrix shape(rows, std::vector<bool>(columns, 0));
-
-	for (unsigned int i = b.ay; i <= b.by; ++i) {
-		for (unsigned int j = b.ax; j <= b.bx; ++j) {
-			if ( (matrix.at(i).at(j).id == shape_id) != negate && matrix.at(i).at(j).id != 0) {
-			 shape.at(i - b.ay).at(j - b.ax) = 1;
-			}
-		}
-	}
-
-	return shape;
-}
-
-BoolMatrix TetroGridQ::rotateMatrix(const BoolMatrix& A, bool counter) const {
-	BoolMatrix result(A[0].size(), std::vector<bool>(A.size(), 0));
-
-	if (!counter) {
-		unsigned int o = A.size() - 1;
-		for (unsigned int i = 0; i < A.size(); ++i) {
-			for (unsigned int j = 0; j < A[0].size(); ++j) {
-				result.at(j).at(o-i) = A.at(i).at(j);
-			}
-		}
-	} else {
-		unsigned int o = A[0].size() - 1;
-		for (unsigned int i = 0; i < A.size(); ++i) {
-			for (unsigned int j = 0; j < A[0].size(); ++j) {
-				result.at(o-j).at(i) = A.at(i).at(j);
-			}
-		}
-	}
-
-	return result;
-}
-
-bool TetroGridQ::dotMatrix(const BoolMatrix& A, const BoolMatrix& B) const {
-	if (A.size() != B.size() || A[0].size() != B[0].size())
-		return false;
-
-	bool result = false;
-	for (unsigned int i = 0; i < A.size(); ++i) {
-		for (unsigned int j = 0; j < A[0].size(); ++j) {
-			result |= A.at(i).at(j) & B.at(i).at(j);
-		}
-	}
-
-	return result;
-}
-
-bool TetroGridQ::rotateShapeHelper(unsigned int shape_id, bool counter) {
-	boundary shape_boundary = findBoundary(shape_id);
-
-	BoolMatrix shape = findShape(shape_id, shape_boundary);
-	BoolMatrix r_shape = rotateMatrix(shape, counter);
-
-	double del_x = (double(shape_boundary.bx) - shape_boundary.ax)/2;
-	double del_y = (double(shape_boundary.by) - shape_boundary.ay)/2;
-	unsigned int mid_x = floor((shape_boundary.ax + shape_boundary.bx + 1)/2);
-	unsigned int mid_y = floor((shape_boundary.ay + shape_boundary.by + 1)/2);
-
-	boundary test_boundary = {mid_x - int(ceil(del_y)), mid_y - int(ceil(del_x)), mid_x + int(floor(del_y)), mid_y + int(floor(del_x))};
-
-	BoolMatrix test = findShape(shape_id, test_boundary, true);
-
-	if (dotMatrix(r_shape, test) == 0) {
-		block tmp;
-		for (unsigned int i = shape_boundary.ay; i <= shape_boundary.by; ++i) {
-			for (unsigned int j = shape_boundary.ax; j <= shape_boundary.bx; ++j) {
-				if (matrix.at(i).at(j).id == shape_id) {
-					tmp = matrix.at(i).at(j);
-					matrix.at(i).at(j) = {0, QColor(0, 0, 0), BorderNone};
-				}
-			}
-		}
-
-		unsigned int y = 0;
-		for (unsigned int i = test_boundary.ay; i <= test_boundary.by; ++i) {
-			unsigned int x = 0;
-			for (unsigned int j = test_boundary.ax; j <= test_boundary.bx; ++j) {
-				if (r_shape.at(y).at(x)) {
-					matrix.at(i).at(j) = tmp;
-					matrix.at(i).at(j).borders =
-							((j == test_boundary.ax) || !(r_shape.at(y).at(x-1)) ? 1 : 0) << 0 |
-							((j == test_boundary.bx) || !(r_shape.at(y).at(x+1)) ? 1 : 0) << 1 |
-							((i == test_boundary.ay) || !(r_shape.at(y-1).at(x)) ? 1 : 0) << 2 |
-							((i == test_boundary.by) || !(r_shape.at(y+1).at(x)) ? 1 : 0) << 3;
-				}
-				x++;
-			}
-			y++;
-		}
-
-		emit dataChanged(createIndex(qMin(shape_boundary.ay, test_boundary.ay), qMin(shape_boundary.ax, test_boundary.ax)),
-										 createIndex(qMax(shape_boundary.by, test_boundary.by), qMax(shape_boundary.bx, test_boundary.bx)), {});
-		return true;
-	} else {
-		return false;
-	}
-}
-
-void TetroGridQ::makeSnapshot() {
-
 }
