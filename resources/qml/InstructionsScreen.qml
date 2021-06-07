@@ -22,16 +22,56 @@ Item {
 		anchors.fill: parent
 
 		Page {
-			id: firstPage
-
-			Rectangle {
-				anchors.fill: parent
-				color: root.background_color
-			}
+			Rectangle { anchors.fill: parent; color: root.background_color}
 
 			Label {
-				anchors.centerIn: parent
-				text: "Page 1"
+				width: parent.width
+				height: parent.height * 0.2
+				anchors.horizontalCenter: parent.horizontalCenter
+				horizontalAlignment: Text.AlignHCenter
+				text: "Instructions"
+				font.pointSize: 68
+				font.bold: true
+				color: "white"
+			}
+			Column {
+				width: controlsImage.width
+				height: parent.height * 0.9
+				anchors.horizontalCenter: parent.horizontalCenter
+				y: parent.height * 0.2
+
+				Label {
+					text: "Controls"
+					font.pointSize: 40
+					font.bold: true
+					color: "white"
+				}
+				Label {
+					width: parent.width
+					text: "Move the falling shape with the WASD or directional keys."
+					fontSizeMode: Label.HorizontalFit
+					font.pointSize: 24
+					font.bold: true
+					color: "white"
+				}
+				AnimatedImage {
+					id: controlsImage
+					anchors.horizontalCenter: parent.horizontalCenter
+					//width: parent.width
+					height: parent.height * 0.5
+					fillMode: Image.PreserveAspectFit
+					source: "qrc:/textures/controls.gif"
+					playing: swipeView.currentIndex === 0
+				}
+				Label {
+					width: parent.width
+					text: "Use the above controls to move to the next slide."
+					fontSizeMode: Label.HorizontalFit
+					font.pixelSize: 24
+					font.bold: true
+					color: "white"
+					horizontalAlignment: Text.AlignHCenter
+				}
 			}
 
 			Button {
@@ -43,102 +83,252 @@ Item {
 				onClicked: { root.goBack() }
 			}
 		}
-			Item {
-				id: secondPage
-				Rectangle {
-					anchors.fill: parent
-					color: root.background_color
-				}
+		Item {
+			Rectangle { anchors.fill: parent; color: root.background_color }
+
+			Column {
+				width: pointsImage.width
+				height: parent.height * 0.9
+				anchors.centerIn: parent
 
 				Label {
-					anchors.centerIn: parent
-					text: "Page 2"
+					text: "Points"
+					font.pointSize: 40
+					font.bold: true
+					color: "white"
+				}
+				Label {
+					width: parent.width
+					text: "Fill a row with blocks to steal a point from your opponent."
+					fontSizeMode: Label.HorizontalFit
+					font.pointSize: 24
+					font.bold: true
+					color: "white"
+				}
+				AnimatedImage {
+					id: pointsImage
+					anchors.horizontalCenter: parent.horizontalCenter
+					//width: parent.width
+					height: parent.height * 0.35
+					fillMode: Image.PreserveAspectFit
+					source: "qrc:/textures/steal_points.gif"
+					playing: swipeView.currentIndex === 1
+				}
+				Label {
+					width: parent.width
+					text: "Heads up: More points makes the game harder!"
+					fontSizeMode: Label.HorizontalFit
+					font.pixelSize: 24
+					font.bold: true
+					color: "white"
+					//horizontalAlignment: Text.AlignHCenter
+				}
+				Item { width: parent.width; height: parent.height * 0.05 }
+				Label {
+					width: parent.width
+					text: "When your shapes stack too high, you lose the game."
+					fontSizeMode: Label.HorizontalFit
+					font.pointSize: 24
+					font.bold: true
+					color: "white"
+				}
+				AnimatedImage {
+					anchors.horizontalCenter: parent.horizontalCenter
+					//width: parent.width
+					height: parent.height * 0.35
+					fillMode: Image.PreserveAspectFit
+					source: "qrc:/textures/overflow.gif"
+					playing: swipeView.currentIndex === 1
 				}
 			}
-			Item {
-				id: thirdPage
+		}
+		Item {
+			Rectangle { anchors.fill: parent; color: root.background_color }
 
-				Rectangle {
-					anchors.fill: parent
-					color: root.background_color
-				}
+			Column {
+				width: pointsImage.width
+				height: parent.height * 0.9
+				anchors.centerIn: parent
 
 				Label {
-					anchors.centerIn: parent
-					text: "Page 3"
+					text: "Status Effects"
+					font.pointSize: 40
+					font.bold: true
+					color: "white"
+				}
+				Label {
+					width: parent.width
+					text: "Clearing adjacent rows adds effects to your opponent."
+					fontSizeMode: Label.HorizontalFit
+					font.pointSize: 24
+					font.bold: true
+					color: "white"
+				}
+				AnimatedImage {
+					anchors.horizontalCenter: parent.horizontalCenter
+					//width: parent.width
+					height: parent.height * 0.35
+					fillMode: Image.PreserveAspectFit
+					source: "qrc:/textures/effects.gif"
+					playing: swipeView.currentIndex === 2
+				}
+				Row {
+					width: parent.width
+					height: parent.height * 0.1
+
+					Label {
+						width: parent.width * 0.4
+						height: parent.height
+						text: "2 adjacent rows:"
+						horizontalAlignment: Label.AlignRight
+						verticalAlignment: Label.AlignVCenter
+						fontSizeMode: Label.HorizontalFit
+						font.pointSize: 24
+						font.bold: true
+						color: "white"
+					}
+					Item { width: parent.width * 0.05; height: parent.height }
+					Image {
+						width: parent.width * 0.1
+						height: parent.height
+						verticalAlignment: Image.AlignVCenter
+						fillMode: Image.PreserveAspectFit
+						source: "qrc:/textures/repeat_shape_plain.svg"
+					}
+					Item { width: parent.width * 0.05; height: parent.height }
+					Label {
+						width: parent.width * 0.4
+						height: parent.height
+						text: "Spawn the next shape\nrepeatedly."
+						verticalAlignment: Label.AlignVCenter
+						fontSizeMode: Label.HorizontalFit
+						font.pointSize: 16
+						font.bold: true
+						color: "white"
+					}
+				}
+				Row {
+					width: parent.width
+					height: parent.height * 0.1
+
+					Label {
+						width: parent.width * 0.4
+						height: parent.height
+						text: "3 adjacent rows:"
+						horizontalAlignment: Label.AlignRight
+						verticalAlignment: Label.AlignVCenter
+						fontSizeMode: Label.HorizontalFit
+						font.pointSize: 24
+						font.bold: true
+						color: "white"
+					}
+					Item { width: parent.width * 0.05; height: parent.height }
+					Image {
+						width: parent.width * 0.1
+						height: parent.height
+						verticalAlignment: Image.AlignVCenter
+						fillMode: Image.PreserveAspectFit
+						source: "qrc:/textures/mix_controls_plain.svg"
+					}
+					Item { width: parent.width * 0.05; height: parent.height }
+					Label {
+						width: parent.width * 0.4
+						height: parent.height
+						text: "Shuffle the controls."
+						verticalAlignment: Label.AlignVCenter
+						fontSizeMode: Label.HorizontalFit
+						font.pointSize: 16
+						font.bold: true
+						color: "white"
+					}
+				}
+				Row {
+					width: parent.width
+					height: parent.height * 0.2
+
+					Label {
+						width: parent.width * 0.4
+						height: parent.height
+						text: "4 adjacent rows:"
+						horizontalAlignment: Label.AlignRight
+						verticalAlignment: Label.AlignVCenter
+						fontSizeMode: Label.HorizontalFit
+						font.pointSize: 24
+						font.bold: true
+						color: "white"
+					}
+					Item { width: parent.width * 0.05; height: parent.height }
+					Column {
+						width: parent.width * 0.1
+						height: parent.height*0.9
+						anchors.verticalCenter: parent.verticalCenter
+
+						Image {
+							width: parent.width
+							height: parent.height/2
+							verticalAlignment: Image.AlignVCenter
+							fillMode: Image.PreserveAspectFit
+							source: "qrc:/textures/repeat_shape_plain.svg"
+						}
+						Image {
+							width: parent.width
+							height: parent.height/2
+							verticalAlignment: Image.AlignVCenter
+							fillMode: Image.PreserveAspectFit
+							source: "qrc:/textures/mix_controls_plain.svg"
+						}
+					}
+					Item { width: parent.width * 0.05; height: parent.height }
+					Label {
+						width: parent.width * 0.4
+						height: parent.height
+						text: "Double trouble!"
+						verticalAlignment: Label.AlignVCenter
+						fontSizeMode: Label.HorizontalFit
+						font.pointSize: 16
+						font.bold: true
+						color: "white"
+					}
+				}
+				Label {
+					width: parent.width
+					text: "Clear rows to remove status effects.\nYou cannot steal points while effects are active!"
+					fontSizeMode: Label.HorizontalFit
+					font.pointSize: 24
+					font.bold: true
+					color: "white"
 				}
 			}
+		}
+
+		Item {
+			Rectangle { anchors.fill: parent; color: root.background_color }
+
+			Column {
+				width: parent.width
+				anchors.centerIn: parent
+
+				Label {
+					width: parent.width
+					anchors.horizontalCenter: parent.horizontalCenter
+					horizontalAlignment: Text.AlignHCenter
+					text: "Have fun!"
+					font.pointSize: 68
+					font.bold: true
+					color: "white"
+				}
+				Label {
+					width: parent.width
+					anchors.horizontalCenter: parent.horizontalCenter
+					horizontalAlignment: Text.AlignHCenter
+					text: "Press 'W' to start the game."
+					font.pointSize: 24
+					font.bold: true
+					color: "white"
+				}
+			}
+		}
 	}
-
-//	RoundButton {
-//		id: backward
-//		width: 50
-//		height: width
-
-//		anchors.left: parent.left
-//		anchors.leftMargin: 10
-//		anchors.verticalCenter: parent.verticalCenter
-
-//		opacity: swipeView.currentIndex === 0 ? false : 1
-
-//		Behavior on opacity {
-//			NumberAnimation { duration: 300 }
-//		}
-
-//		Image {
-//			width: parent.width * 0.8
-//			height: width
-//			anchors.centerIn: parent
-//			source: "qrc:/textures/backward.svg"
-//		 }
-
-//		 onClicked: {
-//			 if(swipeView.currentIndex > 0)
-//					 swipeView.currentIndex--
-//		 }
-//	}
-
-//	 RoundButton {
-//		 id: forward
-//		 width: 50
-//		 height: width
-
-//		 anchors.right: parent.right
-//		 anchors.rightMargin: 10
-//		 anchors.verticalCenter: parent.verticalCenter
-
-//		 opacity: swipeView.currentIndex === swipeView.count-1 ? 0 : 1
-
-//		 Behavior on opacity {
-//			 NumberAnimation { duration: 300 }
-//		 }
-
-//			Image {
-//				width: parent.width * 0.8
-//				height: width
-//				anchors.centerIn: parent
-//				source: "qrc:/textures/forward.svg"
-//			}
-
-//			onClicked: {
-//				if(swipeView.currentIndex < swipeView.count)
-//						swipeView.currentIndex++
-//			}
-//	 }
-
-//	 Button {
-//		 anchors.horizontalCenter: parent.horizontalCenter
-//		 y: parent.height * 0.75
-
-//		 opacity: swipeView.currentIndex === swipeView.count-1 ? 1 : 0
-
-//		 Behavior on opacity {
-//			 NumberAnimation { duration: 300 }
-//		 }
-
-//		 text: "Start match!"
-//	 }
-
 
 	PageIndicator {
 		id: indicator

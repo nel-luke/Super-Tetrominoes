@@ -18,14 +18,14 @@ function goGame() {
 		playerTimer.start()
 }
 
-function pauseGame() {
-	playerTimer.stop()
-}
+//function pauseGame() {
+//	playerTimer.stop()
+//}
 
-function resumeGame() {
-	root.disablePauseButton()
-	countDown.activate()
-}
+//function resumeGame() {
+//	root.disablePauseButton()
+//	countDown.activate()
+//}
 
 function resetGame() {
 	playerTimer.stop()
@@ -35,15 +35,15 @@ function resetGame() {
 	root.game_started = false
 }
 
-function resetGameCompletely() {
-	resetGame()
-	resetTimer.start()
-}
+//function resetGameCompletely() {
+//	resetGame()
+//	resetTimer.start()
+//}
 
 function loseGame() {
 	root.gameFailed()
 	resetGame()
-	resetTimer.start()
+	//resetTimer.start()
 }
 
 function adjustTime() {

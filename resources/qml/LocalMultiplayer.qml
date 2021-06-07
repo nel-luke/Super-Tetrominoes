@@ -71,7 +71,7 @@ Page {
 				onSetFocus: { background.focus = true }
 				onGetPoints: { player2.removePoints(num_points) }
 				onSendSpecial: { player2.getSpecial(special_type) }
-				onGameFailed: { player2.resetGame(); gameOverMenu.appear(player1.username + " Wins!") }
+				onGameFailed: { player2.resetGame(); gameOverMenu.appear(player2.username + " Wins!") }
 			}
 
 			PlayArea {
@@ -84,7 +84,7 @@ Page {
 				//onSetFocus: { background.focus = true }
 				onGetPoints: { player1.removePoints(num_points) }
 				onSendSpecial: { player1.getSpecial(special_type) }
-				onGameFailed: { player1.resetGame(); gameOverMenu.appear(player2.username + " Wins!") }
+				onGameFailed: { player1.resetGame(); gameOverMenu.appear(player1.username + " Wins!") }
 			}
 	}
 
@@ -95,6 +95,7 @@ Page {
 		backgroundColor: Material.background
 		quit_button_text: "Quit to Menu"
 		onQuitButtonPressed: { root.returnToMenu() }
+		onAfterAppear: { player1.resetLater(); player2.resetLater() }
 	}
 
 	InstructionsScreen {

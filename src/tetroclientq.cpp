@@ -9,7 +9,8 @@ TetroClientQ::TetroClientQ(QObject *parent) :
 		control_timer_id(0),
 		packet_is_lost(false),
 		ready_timer_id(0),
-		win_timer_id(0) {
+		win_timer_id(0),
+		hold_control(false) {
 	connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(getReply(QNetworkReply*)));
 
 }
@@ -18,9 +19,12 @@ void TetroClientQ::sendData(const QString& message_type, QJsonObject&& data) con
 	QNetworkRequest request(server_address);
 
 	request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+	//request.setRawHeader("Set-Cookie", "SameSite=None,Secure");
+
 	QJsonObject json;
 	json["type"] = message_type;
 	json["data"] = data;
+	json["cookie"] = session_cookie;
 	QJsonDocument doc(json);
 
 	manager->post(request, doc.toJson());
@@ -50,6 +54,9 @@ void TetroClientQ::handleLoginSuccessful(QJsonObject&& data) const {
 }
 
 void TetroClientQ::appendControls(QJsonArray&& data) {
+	if (hold_control)
+		return;
+
 	QVector<QJsonObject> list(data.size());
 	std::transform(data.begin(), data.end(), list.begin(),
 								 [](const QJsonValue& a) { return a.toObject(); });
@@ -99,6 +106,9 @@ void TetroClientQ::handleControl() {
 		if (control_number == -1) {
 			int to_send = control_queue[0]["args"].toInt();
 			//qDebug() << "Sending control " << to_send;
+			if (to_send > control_log.size())
+				return;
+
 			control a = control_log[to_send];
 
 			QJsonObject json;
@@ -151,7 +161,14 @@ void TetroClientQ::handleControl() {
 				break;
 			case GetSpecial: emit getGetSpecial(args[0].toUInt());
 				break;
-			case WinGame: emit getWinGame(); control_log.clear(); sendData("Terminate");
+			case WinGame:
+				emit getWinGame();
+				hold_control = true;
+				control_queue.clear();
+				control_log.clear();
+				next_control_number = 0;
+				sendData("WinGame");
+				return;
 				break;
 			case SpawnShape: emit getSpawnShape(args[0].toUInt(), args[1].toString());
 				break;
@@ -169,6 +186,7 @@ void TetroClientQ::handleOpponentReady() {
 	if (ready_timer_id != 0) {
 		killTimer(ready_timer_id);
 		ready_timer_id = 0;
+		control_queue.clear();
 		emit startGame();
 	}
 }
@@ -180,6 +198,7 @@ void TetroClientQ::handleTerminated() {
 		win_timer_id = 0;
 	}
 	control_log.clear();
+	next_control_number = 0;
 }
 
 void TetroClientQ::handleDisconnected() {
@@ -197,6 +216,7 @@ void TetroClientQ::handleDisconnected() {
 	}
 	control_queue.clear();
 	control_log.clear();
+	next_control_number = 0;
 	emit disconnected();
 }
 
@@ -228,19 +248,23 @@ void TetroClientQ::sendChallenge(const QString& player_id) const {
 
 void TetroClientQ::getReply(QNetworkReply *reply) {
 	QByteArray str = reply->readAll();
+
 	QJsonObject json = QJsonDocument::fromJson(str).object();
+
+	session_cookie = json["cookie"].toString();
 
 	switch (json["type"].toInt()) {
 		case PhpEcho:
 			qInfo() << "PHP Echo: " << str;
 			break;
 		case Success:
+			if (hold_control) sendData("WinGame");
 			break;
 		case Error:
-			//qDebug() << "Error: " << json["data"].toString();
+			qDebug() << "Error: " << json["data"].toString();
 			break;
 		case Debug:
-			//qInfo() << "Debug: " << json["data"].toString();
+			qInfo() << "Debug: " << json["data"].toString();
 			break;
 
 		case LoginSuccess:
@@ -281,9 +305,13 @@ void TetroClientQ::getReply(QNetworkReply *reply) {
 		case Terminated:
 			handleTerminated();
 			break;
+		case WinGameSuccess:
+			hold_control = false;
+			sendData("Terminate");
+			break;
 
 		default:
-			//qInfo() << "Error: Missing case for response code " << json["type"].toInt();
+			qDebug() << "Error: Missing case for response code " << json["type"].toInt();
 			break;
 	}
 }

@@ -25,7 +25,8 @@ Item {
 
 	function makeChallenge(player_id, player_username) {
 		sendChallengeDialog.appear(player_username)
-		root.sendChallenge(player_id, player_username)
+		root.sendChallenge(player_id)
+		root.setUsername(player_username)
 	}
 
 	function challengeDeclined() {

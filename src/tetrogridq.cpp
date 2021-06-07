@@ -156,7 +156,7 @@ int TetroGridQ::spawnShape(unsigned int shape_type, QColor color) {
 		}
 	}
 
-	int x_start = floor(getColumns()/2) - 1;
+	int x_start = floor(getColumns()/2) - 2;
 	if (!blocks_present) {
 		unsigned int shape_id = new_shape_id++;
 		for (int i = 0; i < 2; ++i) {

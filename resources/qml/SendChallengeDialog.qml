@@ -50,7 +50,7 @@ Item {
 	Timer {
 		id: timeoutTimer
 		interval: 15000
-		onTriggered: { root.closeWithMessage("Connection lost", true) }
+		onTriggered: { root.closeWithMessage("Connection lost", false) }
 	}
 
 	Rectangle {

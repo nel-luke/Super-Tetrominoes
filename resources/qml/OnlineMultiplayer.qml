@@ -163,7 +163,7 @@ Item {
 		quit_button_text: "Back to Lobby"
 		onQuitButtonPressed: { lobby.appear() }
 
-		onAfterAppear: { instructions.appear() }
+		onAfterAppear: { instructions.appear(); player1.resetLater(); player2.resetLater() }
 	}
 
 	Lobby {

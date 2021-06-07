@@ -20,31 +20,47 @@ function decrementRepeatShape() {
 
 function incrementMixControls() {
 	root.mix_controls_count++
-	root.controls_order = shuffle(root.controls_order)
+	root.controls_order = shuffle(root.controls_order, root.shape_handle)
 }
 
 function decrementMixControls() {
 	root.mix_controls_count--
 
 	if (root.mix_controls_count !== 0) {
-		root.controls_order = shuffle(root.controls_order)
+		root.controls_order = shuffle(root.controls_order, root.shape_handle)
 	} else {
 		root.controls_order = [0, 1, 2, 3]
 	}
 }
 
-function shuffle(array) {
-	var i = array.length, tmp, r;
+function shuffle(array, seed) {
+	var i = array.length
+	var tmp, r;
 
-	while (i !== 0) {
-		r = Math.floor(Math.random() * i);
-		i--;
+	while (i-- !== 0) {
+		r = random(seed, 0, array.length)
 
-		tmp = array[i];
-		array[i] = array[r];
-		array[r] = tmp;
+		tmp = array[i]
+		array[i] = array[r]
+		array[r] = tmp
 	}
 
-	return array;
+	console.log(array)
+	return array
+}
+
+
+
+function random(seed, i, f) {
+	if (typeof random.state === 'undefined')
+		random.state = seed
+
+	var m = 0x80000000
+	var a = 1103515245
+	var c = 12435
+
+	var range = f - i
+	random.state = ((a * random.state + c) % m)
+	return i + Math.floor((random.state/m) * range)
 }
 

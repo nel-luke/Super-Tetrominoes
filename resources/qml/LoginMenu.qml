@@ -167,11 +167,11 @@ Item {
 	states: [
 		State {
 			name: "retracted"
-			PropertyChanges { target: root; y: -height; visible: false; focus: false }
+			PropertyChanges { target: root; y: -height; visible: false; /*focus: false*/ }
 		},
 		State {
 			name: "visible"
-			PropertyChanges { target: root; y: 0; visible: true; focus: true }
+			PropertyChanges { target: root; y: 0; visible: true; /*focus: true*/ }
 		}
 	]
 
@@ -181,14 +181,15 @@ Item {
 				SequentialAnimation {
 					ScriptAction { script: { root.afterDisappear() } }
 					NumberAnimation { properties: "y"; easing.type: Easing.InOutQuad; duration: 500 }
-					PropertyAnimation { properties: "visible, focus" }
+					PropertyAnimation { properties: "visible" }
 				}
 		},
 		Transition {
 			from: "retracted"; to: "visible"
 			SequentialAnimation {
-				PropertyAnimation { properties: "visible, focus" }
+				PropertyAnimation { properties: "visible" }
 				NumberAnimation { properties: "y"; easing.type: Easing.InOutQuad; duration: 500 }
+				ScriptAction { script: { usernameField.forceActiveFocus() } }
 			}
 		}
 	]

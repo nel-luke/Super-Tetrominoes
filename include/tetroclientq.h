@@ -42,7 +42,9 @@ private:
 		ChallengeDeclined,
 		Control,
 		OpponentReady,
-		Terminated
+		Terminated,
+		WinGameSuccess,
+
 	};
 
 	enum ControlName {
@@ -72,6 +74,8 @@ private:
 	bool packet_is_lost;
 	int ready_timer_id;
 	int win_timer_id;
+	QString session_cookie;
+	bool hold_control;
 
 
 	void sendData(const QString& message_type, QJsonObject&& data = QJsonObject()) const;

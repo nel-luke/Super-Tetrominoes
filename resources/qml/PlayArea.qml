@@ -75,11 +75,12 @@ Item {
 	function startGame() { waitingScreen.deactivate() }
 	function startGameHelper() { State.prepareGame(); countDown.activate() }
 	function removePoints(num_points) { Service.removePoints(num_points) }
-	function pauseGame() { State.pauseGame() }
-	function resumeGame() { State.resumeGame() }
-	function resumeGameNow() { State.goGame() }
+//	function pauseGame() { State.pauseGame() }
+//	function resumeGame() { State.resumeGame() }
+//	function resumeGameNow() { State.goGame() }
 	function restartGame() { State.restartGame() }
-	function resetGame() { State.resetGameCompletely() }
+	function resetGame() { State.resetGame(); }//State.resetGameCompletely() }
+	function resetLater() { data.reset(); root.points = root.startPoints; waitingScreen.activate() }
 
 	function keyUp() { Control.keyUp() }
 	function keyDown() { Control.keyDown() }
@@ -107,11 +108,11 @@ Item {
 		onTriggered: { Service.deleteRow() }
 	}
 
-	Timer {
-		id: resetTimer
-		interval: 1000
-		onTriggered: { data.reset(); root.points = root.startPoints; waitingScreen.activate() }
-	}
+//	Timer {
+//		id: resetTimer
+//		interval: 1000
+//		onTriggered: { data.reset(); root.points = root.startPoints; waitingScreen.activate() }
+//	}
 
 	Column {
 		width: root.gridColumns * root.block_size

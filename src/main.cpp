@@ -1,14 +1,18 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
+#include <QFontDatabase>
 
-int main(int argc, char *argv[])
-{
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+#include <QFile>
+
+int main(int argc, char *argv[]) {
 	QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-#endif
-
 	QGuiApplication app(argc, argv);
+
+	QFontDatabase::addApplicationFont(":/textures/OpenSans-Bold.ttf");
+	QFont font("Open Sans",16,QFont::Bold);
+	app.setFont(font);
+
 	QQuickStyle::setStyle("Material");
 
 	QQmlApplicationEngine engine;

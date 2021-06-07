@@ -104,9 +104,9 @@ function serviceState(num_points) {
 		root.points_to_add = num_points
 
 		switch (num_points) {
-		case 2 : root.sendSpecial(TetroGridQ.RepeatShape)
+		case 3 : root.sendSpecial(TetroGridQ.RepeatShape)
 			break
-		case 3 : root.sendSpecial(TetroGridQ.MixControls)
+		case 2 : root.sendSpecial(TetroGridQ.MixControls)
 			break
 		case 4 : root.sendSpecial(TetroGridQ.RepeatShape | TetroGridQ.MixControls)
 		}

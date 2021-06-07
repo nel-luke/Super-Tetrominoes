@@ -2,5 +2,10 @@
     <qresource prefix="/textures/" >
         <file>mix_controls_plain.svg</file>
         <file>repeat_shape_plain.svg</file>
+        <file>OpenSans-Bold.ttf</file>
+        <file>controls.gif</file>
+        <file>steal_points.gif</file>
+        <file>overflow.gif</file>
+        <file>effects.gif</file>
     </qresource>
 </RCC>

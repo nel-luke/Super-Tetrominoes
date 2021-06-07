@@ -59,12 +59,6 @@ Item {
 		}
 
 		Button {
-			text: "Credits"
-			Layout.fillWidth: true
-			Layout.fillHeight: true
-		}
-
-		Button {
 			text: "Quit"
 			Layout.fillWidth: true
 			Layout.fillHeight: true
