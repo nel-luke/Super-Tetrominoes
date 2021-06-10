@@ -1,5 +1,6 @@
 #include "tetroclientq.h"
 
+// -- Constructor --
 TetroClientQ::TetroClientQ(QObject *parent) :
 		QObject(parent),
 		manager(new QNetworkAccessManager(this)),
@@ -11,15 +12,16 @@ TetroClientQ::TetroClientQ(QObject *parent) :
 		ready_timer_id(0),
 		win_timer_id(0),
 		hold_control(false) {
-	connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(getReply(QNetworkReply*)));
 
+	connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(getReply(QNetworkReply*)));
 }
 
+
+// -- Private Methods --
 void TetroClientQ::sendData(const QString& message_type, QJsonObject&& data) const {
 	QNetworkRequest request(server_address);
 
 	request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-	//request.setRawHeader("Set-Cookie", "SameSite=None,Secure");
 
 	QJsonObject json;
 	json["type"] = message_type;
@@ -46,11 +48,6 @@ QList<QVariantMap> TetroClientQ::makeList(const QJsonArray&& values) const {
 	std::transform(values.begin(), values.end(), list.begin(),
 								 [](const QJsonValue& a) { return a.toObject().toVariantMap(); });
 	return QList<QVariantMap>::fromVector(list);
-}
-
-void TetroClientQ::handleLoginSuccessful(QJsonObject&& data) const {
-	emit loginSuccessful(data["username"].toString());
-	handlePlayerListReady(std::move(data));
 }
 
 void TetroClientQ::appendControls(QJsonArray&& data) {
@@ -84,6 +81,13 @@ void TetroClientQ::appendControls(QJsonArray&& data) {
 			//qDebug() << "Starting timer " << control_timer_id;
 		}
 	}
+}
+// -- End (Private Methods) --
+
+// -- Handlers --
+void TetroClientQ::handleLoginSuccessful(QJsonObject&& data) const {
+	emit loginSuccessful(data["username"].toString());
+	handlePlayerListReady(std::move(data));
 }
 
 void TetroClientQ::handlePlayerListReady(QJsonObject&& data) const {
@@ -219,7 +223,9 @@ void TetroClientQ::handleDisconnected() {
 	next_control_number = 0;
 	emit disconnected();
 }
+// -- End (Handlers) --
 
+// -- Protected Methods --
 void TetroClientQ::timerEvent(QTimerEvent* event) {
 	int event_id = event->timerId();
 	if (event_id == control_timer_id) {
@@ -230,7 +236,9 @@ void TetroClientQ::timerEvent(QTimerEvent* event) {
 		sendControl(WinGame);
 	}
 }
+// -- End (Protected Methods)
 
+// -- Server Commands --
 void TetroClientQ::login(const QString& username, const QString& real_name) const {
 	QJsonObject json;
 	json["username"] = username;
@@ -246,6 +254,15 @@ void TetroClientQ::sendChallenge(const QString& player_id) const {
 	sendData("SendChallenge", std::move(json));
 }
 
+void TetroClientQ::sendReady() {
+	sendData("Ready");
+	if (ready_timer_id == 0) {
+		ready_timer_id = startTimer(50);
+	}
+}
+// -- End (Server Commands) --
+
+// -- Private Slots --
 void TetroClientQ::getReply(QNetworkReply *reply) {
 	QByteArray str = reply->readAll();
 
@@ -315,14 +332,9 @@ void TetroClientQ::getReply(QNetworkReply *reply) {
 			break;
 	}
 }
+// -- End (Private Slots) --
 
-void TetroClientQ::sendReady() {
-	sendData("Ready");
-	if (ready_timer_id == 0) {
-		ready_timer_id = startTimer(50);
-	}
-}
-
+// -- Send State Controls --
 void TetroClientQ::sendWinGame() {
 	QJsonObject json;
 	json["control_number"] = control_log.size();
@@ -334,3 +346,4 @@ void TetroClientQ::sendWinGame() {
 		win_timer_id = startTimer(50);
 	}
 }
+// -- End (Send State Controls) --

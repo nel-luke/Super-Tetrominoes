@@ -1,18 +1,38 @@
 #include "../include/tetrogridq.h"
 #include "../include/c_shapes.h"
 
+// -- Constructors ---
 TetroGridQ::TetroGridQ(QObject* parent):
 		QAbstractTableModel(parent),
 		matrix(2, std::vector<block_info>(4, block_info())),
 		new_shape_id(1), debug_enabled(false) {
+
 	#ifdef QT_DEBUG
 		debug_enabled = true;
 	#endif
+
 	for (int i = 0; i < numShapes; ++i) {
 		shapes.push_back(QGenericMatrix<4, 2, unsigned short>(c_shapes[i]));
 	}
 }
+// -- End (Constructors) --
 
+// -- Private Methods --
+std::vector<TetroGridQ::block_vertex> TetroGridQ::findShapeVertices(unsigned int shape_id) const {
+	std::vector<block_vertex> vertices;
+	for (int i = 0; i < int(getRows()); ++i) {
+		for (int j = 0; j < int(getColumns()); ++j) {
+			if (matrix[i][j].id == shape_id) {
+				vertices.push_back({ i, j });
+			}
+		}
+	}
+
+	return vertices;
+}
+// -- End (Private Methods) --
+
+// -- Setter Methods --
 void TetroGridQ::setRows(unsigned int count) {
 		if (count > getRows()) {
 				insertRows(0, count - getRows());
@@ -30,121 +50,9 @@ void TetroGridQ::setColumns(unsigned int count) {
 		}
 		emit columnsChanged();
 }
+// -- End (Setter Methods) --
 
-// Inherited Read Methods
-int TetroGridQ::rowCount(const QModelIndex& /*parent*/) const {
-		return matrix.size();
-}
-
-int TetroGridQ::columnCount(const QModelIndex& /*parent*/) const {
-		return matrix.at(0).size();
-}
-
-auto TetroGridQ::data(const QModelIndex& index, int role) const
--> QVariant {
-		QVariant result;
-		switch (role) {
-			case  blockColor: result = QVariant::fromValue(matrix.at(index.row()).at(index.column()).color);
-					break;
-			case hasBorderLeft : result = QVariant::fromValue(matrix.at(index.row()).at(index.column()).borders & BorderLeft ? 1 : 0);
-					break;
-			case hasBorderRight : result = QVariant::fromValue(matrix.at(index.row()).at(index.column()).borders & BorderRight ? 1 : 0);
-					break;
-			case hasBorderTop : result = QVariant::fromValue(matrix.at(index.row()).at(index.column()).borders & BorderTop ? 1 : 0);
-					break;
-			case hasBorderBottom : result = QVariant::fromValue(matrix.at(index.row()).at(index.column()).borders & BorderBottom ? 1 : 0);
-					break;
-				default : result = QVariant();
-		}
-		return result;
-}
-
-auto TetroGridQ::headerData(int section, Qt::Orientation orientation, int role) const
--> QVariant {
-		if (orientation == Qt::Horizontal)
-				return QVariant();
-
-		QVariant result;
-		switch (role) {
-				case Qt::DisplayRole : result = QVariant(section).toString();
-						break;
-				default : result = QVariant();
-		}
-		return result;
-}
-
-auto TetroGridQ::roleNames() const
--> QHash<int, QByteArray> {
-		QHash<int, QByteArray> roles;
-		roles[blockColor] = "blockColor";
-		roles[hasBorderLeft] = "hasBorderLeft";
-		roles[hasBorderRight] = "hasBorderRight";
-		roles[hasBorderTop] = "hasBorderTop";
-		roles[hasBorderBottom] = "hasBorderBottom";
-		return roles;
-}
-
-
-// Inherited Write Methods
-bool TetroGridQ::setData(const QModelIndex&, const QVariant&, int) {
-		return false;
-}
-
-auto TetroGridQ::flags(const QModelIndex& /*index*/) const
--> Qt::ItemFlags {
-		return Qt::ItemIsSelectable | Qt::ItemNeverHasChildren
-						| Qt::ItemIsEnabled;
-}
-
-
-// Inherited Resize Methods
-bool TetroGridQ::insertRows(int before_row, int count, const QModelIndex& parent) {
-		beginInsertRows(parent, before_row + 1, before_row + count);
-		matrix.insert(matrix.begin() + before_row, count,
-									std::vector<block_info>(getColumns(), block_info()));
-		endInsertRows();
-		return true;
-}
-
-bool TetroGridQ::removeRows(int from_row, int count, const QModelIndex &parent) {
-		beginRemoveRows(parent, from_row, from_row + count - 1);
-		matrix.erase(matrix.begin() + from_row, matrix.begin() + from_row + count);
-		endRemoveRows();
-		return true;
-}
-
-bool TetroGridQ::insertColumns(int before_column, int count, const QModelIndex& parent) {
-		beginInsertColumns(parent, before_column + 1, before_column + count);
-		for (auto& it : matrix) {
-				it.insert(it.begin() + before_column, count, { 0, QColor(0, 0, 0), BorderNone });
-		}
-		endInsertColumns();
-		return true;
-}
-
-bool TetroGridQ::removeColumns(int from_column, int count, const QModelIndex &parent) {
-		beginRemoveColumns(parent, from_column, from_column + count - 1);
-		for (auto& it : matrix) {
-				it.erase(it.begin() + from_column, it.begin() + from_column + count);
-		}
-		endInsertColumns();
-		return true;
-}
-
-std::vector<TetroGridQ::block_vertex> TetroGridQ::findShapeVertices(unsigned int shape_id) const {
-	std::vector<block_vertex> vertices;
-	for (int i = 0; i < int(getRows()); ++i) {
-		for (int j = 0; j < int(getColumns()); ++j) {
-			if (matrix[i][j].id == shape_id) {
-				vertices.push_back({ i, j });
-			}
-		}
-	}
-
-	return vertices;
-}
-
-// Slots
+// -- Interface Methods --
 int TetroGridQ::spawnShape(unsigned int shape_type, QColor color) {
 	shape_type = qMin(getNumShapes()-1, shape_type);
 	QGenericMatrix<4, 2, unsigned short> shape_borders = shapes[shape_type];
@@ -193,7 +101,9 @@ bool TetroGridQ::moveShapeLeft(unsigned int shape_id) {
 		}
 
 		block_vertex a = { qMax(vertices[2].y-3, 0), qMax(vertices[2].x-3, 0) };
-		block_vertex b = { qMin(vertices[2].y+3, int(getRows()-1)), qMin(vertices[2].x+3, int(getColumns()-1)) };
+		block_vertex b =
+			{ qMin(vertices[2].y+3, int(getRows()-1)), qMin(vertices[2].x+3, int(getColumns()-1)) };
+
 		emit dataChanged(createIndex(a.y, a.x), createIndex(b.y, b.x), {});
 		return true;
 	}
@@ -209,7 +119,8 @@ bool TetroGridQ::moveShapeRight(unsigned int shape_id) {
 
 	bool can_move = true;
 	for (const auto& v : vertices) {
-		can_move &= (v.x < int(getColumns()-1) && (matrix[v.y][v.x+1].id == 0	|| matrix[v.y][v.x+1].id == shape_id) );
+		can_move &= (v.x < int(getColumns()-1) &&
+			(matrix[v.y][v.x+1].id == 0	|| matrix[v.y][v.x+1].id == shape_id) );
 	}
 
 	if (can_move) {
@@ -221,7 +132,8 @@ bool TetroGridQ::moveShapeRight(unsigned int shape_id) {
 		}
 
 		block_vertex a = { qMax(vertices[2].y-3, 0), qMax(vertices[2].x-3, 0) };
-		block_vertex b = { qMin(vertices[2].y+3, int(getRows()-1)), qMin(vertices[2].x+3, int(getColumns()-1)) };
+		block_vertex b =
+			{ qMin(vertices[2].y+3, int(getRows()-1)), qMin(vertices[2].x+3, int(getColumns()-1)) };
 		emit dataChanged(createIndex(a.y, a.x), createIndex(b.y, b.x), {});
 		return true;
 	}
@@ -237,7 +149,8 @@ bool TetroGridQ::moveShapeDown(unsigned int shape_id) {
 
 	bool can_move = true;
 	for (const auto& v : vertices) {
-		can_move &= (v.y < int(getRows()-1) && (matrix[v.y+1][v.x].id == 0	|| matrix[v.y+1][v.x].id == shape_id) );
+		can_move &= (v.y < int(getRows()-1) &&
+			(matrix[v.y+1][v.x].id == 0	|| matrix[v.y+1][v.x].id == shape_id) );
 	}
 
 	if (can_move) {
@@ -249,7 +162,8 @@ bool TetroGridQ::moveShapeDown(unsigned int shape_id) {
 		}
 
 		block_vertex a = { qMax(vertices[2].y-3, 0), qMax(vertices[2].x-3, 0) };
-		block_vertex b = { qMin(vertices[2].y+3, int(getRows()-1)), qMin(vertices[2].x+3, int(getColumns()-1)) };
+		block_vertex b =
+			{ qMin(vertices[2].y+3, int(getRows()-1)), qMin(vertices[2].x+3, int(getColumns()-1)) };
 		emit dataChanged(createIndex(a.y, a.x), createIndex(b.y, b.x), {});
 		return true;
 	}
@@ -301,14 +215,15 @@ bool TetroGridQ::rotateShape(unsigned int shape_id) {
 		for (const auto& r : rotated) {
 			matrix[r.y][r.x].borders = (unsigned short)(
 				(((r.x > 0) && matrix[r.y][r.x-1].id != shape_id) ? 1 : 0)										<< 0 |
-				(((r.x < int(getColumns()-1)) && matrix[r.y][r.x+1].id != shape_id) ? 1 : 0)			<< 1 |
+				(((r.x < int(getColumns()-1)) && matrix[r.y][r.x+1].id != shape_id) ? 1 : 0)	<< 1 |
 				(((r.y > 0) && matrix[r.y-1][r.x].id != shape_id) ? 1 : 0)										<< 2 |
-				(((r.y < int(getRows()-1)) && matrix[r.y+1][r.x].id != shape_id) ? 1 : 0)	<< 3
+				(((r.y < int(getRows()-1)) && matrix[r.y+1][r.x].id != shape_id) ? 1 : 0)			<< 3
 			);
 		}
 
 		block_vertex a = { qMax(vertices[2].y-3, 0), qMax(vertices[2].x-3, 0) };
-		block_vertex b = { qMin(vertices[2].y+3, int(getRows()-1)), qMin(vertices[2].x+3, int(getColumns()-1)) };
+		block_vertex b =
+			{ qMin(vertices[2].y+3, int(getRows()-1)), qMin(vertices[2].x+3, int(getColumns()-1)) };
 		emit dataChanged(createIndex(a.y, a.x), createIndex(b.y, b.x), {});
 		return true;
 	}
@@ -316,17 +231,6 @@ bool TetroGridQ::rotateShape(unsigned int shape_id) {
 	return false;
 }
 
-void TetroGridQ::reset() {
-	for (auto& row : matrix) {
-			for (auto& col : row) {
-					col = { 0, QColor(0, 0, 0), BorderNone };
-			}
-	}
-	new_shape_id = 1;
-	emit dataChanged(createIndex(0, 0), createIndex(getRows(), getColumns()), {});
-}
-
-// Private Methods
 std::vector<int> TetroGridQ::checkRows() {
 	std::vector<int> rows;
 	for (unsigned int i = 0 ; i < getRows(); ++i) {
@@ -371,3 +275,128 @@ void TetroGridQ::deleteRow(unsigned int index) {
 
 	emit dataChanged(createIndex(index,0), createIndex(qMin(index+1, getRows()),getColumns()), {});
 }
+
+void TetroGridQ::reset() {
+	for (auto& row : matrix) {
+			for (auto& col : row) {
+					col = { 0, QColor(0, 0, 0), BorderNone };
+			}
+	}
+	new_shape_id = 1;
+	emit dataChanged(createIndex(0, 0), createIndex(getRows(), getColumns()), {});
+}
+// -- End (Interface Methods) --
+
+// -- Inherited Read Methods --
+int TetroGridQ::rowCount(const QModelIndex& /*parent*/) const {
+		return matrix.size();
+}
+
+int TetroGridQ::columnCount(const QModelIndex& /*parent*/) const {
+		return matrix.at(0).size();
+}
+
+auto TetroGridQ::data(const QModelIndex& index, int role) const
+-> QVariant {
+		QVariant result;
+		switch (role) {
+			case  blockColor:
+				result = QVariant::fromValue(
+					matrix.at(index.row()).at(index.column()).color);
+				break;
+			case hasBorderLeft:
+				result = QVariant::fromValue(
+					matrix.at(index.row()).at(index.column()).borders & BorderLeft ? 1 : 0);
+				break;
+			case hasBorderRight:
+				result = QVariant::fromValue(
+					matrix.at(index.row()).at(index.column()).borders & BorderRight ? 1 : 0);
+				break;
+			case hasBorderTop:
+				result = QVariant::fromValue(
+					matrix.at(index.row()).at(index.column()).borders & BorderTop ? 1 : 0);
+				break;
+			case hasBorderBottom:
+				result = QVariant::fromValue(
+					matrix.at(index.row()).at(index.column()).borders & BorderBottom ? 1 : 0);
+				break;
+
+			default : result = QVariant();
+		}
+		return result;
+}
+
+auto TetroGridQ::headerData(int section, Qt::Orientation orientation, int role) const
+-> QVariant {
+		if (orientation == Qt::Horizontal)
+				return QVariant();
+
+		QVariant result;
+		switch (role) {
+				case Qt::DisplayRole : result = QVariant(section).toString();
+						break;
+				default : result = QVariant();
+		}
+		return result;
+}
+
+auto TetroGridQ::roleNames() const
+-> QHash<int, QByteArray> {
+		QHash<int, QByteArray> roles;
+		roles[blockColor]				= "blockColor";
+		roles[hasBorderLeft]		= "hasBorderLeft";
+		roles[hasBorderRight]		= "hasBorderRight";
+		roles[hasBorderTop]			= "hasBorderTop";
+		roles[hasBorderBottom]	= "hasBorderBottom";
+		return roles;
+}
+// -- End (Inherited Read Methods) --
+
+
+// -- Inherited Write Methods --
+bool TetroGridQ::setData(const QModelIndex&, const QVariant&, int) {
+		return false;
+}
+
+auto TetroGridQ::flags(const QModelIndex& /*index*/) const
+-> Qt::ItemFlags {
+		return Qt::ItemIsSelectable | Qt::ItemNeverHasChildren
+						| Qt::ItemIsEnabled;
+}
+// -- End (Inherited Write Methods) --
+
+
+// -- Inherited Resize Methods --
+bool TetroGridQ::insertRows(int before_row, int count, const QModelIndex& parent) {
+		beginInsertRows(parent, before_row + 1, before_row + count);
+		matrix.insert(matrix.begin() + before_row, count,
+									std::vector<block_info>(getColumns(), block_info()));
+		endInsertRows();
+		return true;
+}
+
+bool TetroGridQ::removeRows(int from_row, int count, const QModelIndex &parent) {
+		beginRemoveRows(parent, from_row, from_row + count - 1);
+		matrix.erase(matrix.begin() + from_row, matrix.begin() + from_row + count);
+		endRemoveRows();
+		return true;
+}
+
+bool TetroGridQ::insertColumns(int before_column, int count, const QModelIndex& parent) {
+		beginInsertColumns(parent, before_column + 1, before_column + count);
+		for (auto& it : matrix) {
+				it.insert(it.begin() + before_column, count, { 0, QColor(0, 0, 0), BorderNone });
+		}
+		endInsertColumns();
+		return true;
+}
+
+bool TetroGridQ::removeColumns(int from_column, int count, const QModelIndex &parent) {
+		beginRemoveColumns(parent, from_column, from_column + count - 1);
+		for (auto& it : matrix) {
+				it.erase(it.begin() + from_column, it.begin() + from_column + count);
+		}
+		endInsertColumns();
+		return true;
+}
+// -- End (Inherited Resize Methods) --

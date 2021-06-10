@@ -14,8 +14,6 @@
 #include <cstdlib>
 #include <ctime>
 
-//typedef std::vector<std::vector<bool>> BoolMatrix;
-
 
 class TetroGridQ : public QAbstractTableModel
 {
@@ -26,8 +24,7 @@ class TetroGridQ : public QAbstractTableModel
 	Q_PROPERTY(unsigned int columns READ columnCount WRITE setColumns NOTIFY columnsChanged)
 	Q_PROPERTY(unsigned int numShapes READ getNumShapes)
 	Q_PROPERTY(bool debug_enabled READ getDebug)
-public:
-	//enum SpecialType : short;
+
 private:
 	enum BlockBorder {
 		BorderNone = 0,
@@ -48,27 +45,14 @@ private:
 		int x;
 	};
 
-//	struct boundary {
-//		unsigned int ax;
-//		unsigned int ay;
-//		unsigned int bx;
-//		unsigned int by;
-//	};
-
 	std::vector<std::vector<block_info>> matrix;
 	std::vector<QGenericMatrix<4, 2, unsigned short>> shapes;
 	int new_shape_id;
 
 	bool debug_enabled;
-	bool getDebug() { return debug_enabled; }
 
+	// Private Methods
 	std::vector<block_vertex> findShapeVertices(unsigned int shape_id) const;
-//	boundary findBoundary(unsigned int shape_id) const;
-//	BoolMatrix findShape(unsigned int shape_id, const boundary& b, bool negate = false) const;
-//	BoolMatrix rotateMatrix(const BoolMatrix& A, bool counter = false) const;
-//	bool dotMatrix(const BoolMatrix& A, const BoolMatrix& B) const;
-//	bool rotateShapeHelper(unsigned int shape_id, bool counter);
-
 
 public:
 	enum DataTypes {
@@ -85,17 +69,6 @@ public:
 	};
 	Q_ENUM(SpecialType)
 
-	Q_INVOKABLE int spawnShape(unsigned int shape_type, QColor color);
-	Q_INVOKABLE bool moveShapeLeft(unsigned int shape_id);
-	Q_INVOKABLE bool moveShapeRight(unsigned int shape_id);
-	Q_INVOKABLE bool moveShapeDown(unsigned int shape_id);
-	//Q_INVOKABLE bool moveShapeUp(unsigned int shape_id);
-	Q_INVOKABLE bool rotateShape(unsigned int shape_id);
-	//Q_INVOKABLE bool c_rotateShape(unsigned int shape_id);
-	Q_INVOKABLE std::vector<int> checkRows();
-	Q_INVOKABLE void deleteRow(unsigned int index);
-	Q_INVOKABLE void reset();
-
 	// Constructors
 	explicit TetroGridQ(QObject* parent = nullptr);
 
@@ -103,12 +76,23 @@ public:
 	inline unsigned int getRows() const { return matrix.size(); }
 	inline unsigned int getColumns() const { return matrix[0].size(); }
 	inline unsigned int getNumShapes() const { return shapes.size(); }
+	inline bool getDebug() { return debug_enabled; }
 
 	// Setter Methods
 	void setRows(unsigned int count);
 	void setColumns(unsigned int count);
 
-	// Inherited Methods
+	// Interface Methods
+	Q_INVOKABLE int spawnShape(unsigned int shape_type, QColor color);
+	Q_INVOKABLE bool moveShapeLeft(unsigned int shape_id);
+	Q_INVOKABLE bool moveShapeRight(unsigned int shape_id);
+	Q_INVOKABLE bool moveShapeDown(unsigned int shape_id);
+	Q_INVOKABLE bool rotateShape(unsigned int shape_id);
+	Q_INVOKABLE std::vector<int> checkRows();
+	Q_INVOKABLE void deleteRow(unsigned int index);
+	Q_INVOKABLE void reset();
+
+	// -- Inherited Methods --
 			// Read Methods
 			auto rowCount(const QModelIndex& parent = QModelIndex()) const
 					-> int override;
@@ -136,6 +120,7 @@ public:
 					-> bool override;
 			auto removeColumns(int from_column, int count, const QModelIndex& parent = QModelIndex())
 					-> bool override;
+	// -- End (Inherited Methods) --
 
 			~TetroGridQ() {};
 

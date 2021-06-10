@@ -25,7 +25,8 @@ class TetroClientQ : public QObject
 	Q_OBJECT
 	QML_ELEMENT
 
-	Q_PROPERTY(QString server_address READ serverAddress WRITE setServerAddress NOTIFY serverAddressChanged)
+	Q_PROPERTY(QString server_address READ serverAddress WRITE setServerAddress
+		NOTIFY serverAddressChanged)
 private:
 	enum ResponseType {
 		PhpEcho = 0,
@@ -77,15 +78,16 @@ private:
 	QString session_cookie;
 	bool hold_control;
 
-
+	// Private Methods
 	void sendData(const QString& message_type, QJsonObject&& data = QJsonObject()) const;
 	void sendControl(ControlName control_name, QVariantList&& args = QVariantList());
 	QList<QVariantMap> makeList(const QJsonArray&& values) const;
-	void makeLeaderboard(const QJsonArray& values) const;
+	//void makeLeaderboard(const QJsonArray& values) const;
+	void appendControls(QJsonArray&& data);
 
+	// Handlers
 	void handleLoginSuccessful(QJsonObject&& data) const;
 	void handlePlayerListReady(QJsonObject&& data) const;
-	void appendControls(QJsonArray&& data);
 	void handleControl();
 	void handleOpponentReady();
 	void handleTerminated();
@@ -100,61 +102,73 @@ public:
 	explicit TetroClientQ(QObject *parent = nullptr);
 
 	// Getter Methods
-	inline QString serverAddress() const { return server_address.toString(); }
+	inline QString serverAddress() const
+		{ return server_address.toString(); }
 
-	// Settor Methods
-	inline void setServerAddress(const QString& server_addr) {
-		server_address = QUrl(server_addr); emit serverAddressChanged(); }
-
-	// Interface
-//	Q_INVOKABLE void login(const QString& username, const QString& real_name) const;
-//	Q_INVOKABLE void getOnlinePlayers() const { sendData("GetPlayerList"); }
-//	Q_INVOKABLE void sendChallenge(const QString& player_id) const;
-//	Q_INVOKABLE void pollChange() const { sendData("PollChange"); }
-//	Q_INVOKABLE void acceptChallenge() const { sendData("AcceptChallenge"); }
-//	Q_INVOKABLE void declineChallenge() const { sendData("DeclineChallenge"); }
-
-//	// Controls
-//	Q_INVOKABLE void sendKeyUp() { sendControl(KeyUp); }
-//	Q_INVOKABLE void sendKeyDown() { sendControl(KeyDown); }
-//	Q_INVOKABLE void sendKeyLeft() { sendControl(KeyLeft); }
-//	Q_INVOKABLE void sendKeyRight() { sendControl(KeyRight); }
-//	Q_INVOKABLE void sendDebug(bool result) { sendControl(DebugPlayer, { result }); }
+	// Setter Methods
+	inline void setServerAddress(const QString& server_addr)
+		{ server_address = QUrl(server_addr); emit serverAddressChanged(); }
 
 private slots:
 	void getReply(QNetworkReply* reply);
 
 public slots:
-	void sendRemovePoints(unsigned int num_points)
-		{ sendControl(RemovePoints, {num_points}); }
-	void sendGetSpecial(unsigned int special_type)
-		{ sendControl(GetSpecial, {special_type}); }
-	void sendWinGame();
 
-	void sendSpawnShape(unsigned int shape_type, QColor shape_color)
-		{ sendControl(SpawnShape, {shape_type, shape_color}); }
-	void sendServicePlayer() { sendControl(ServicePlayer); }
-
+	// Server Commands
 	void login(const QString& username, const QString& real_name) const;
-	void getOnlinePlayers() const { sendData("GetPlayerList"); }
 	void sendChallenge(const QString& player_id) const;
-	void pollChange() const { sendData("PollChange"); }
-	void acceptChallenge() const { sendData("AcceptChallenge"); }
-	void declineChallenge() const { sendData("DeclineChallenge"); }
 	void sendReady();
+	inline void getOnlinePlayers() const
+		{ sendData("GetPlayerList"); }
 
-	// Controls
-	void sendKeyUp() { sendControl(KeyUp); }
-	void sendKeyDown() { sendControl(KeyDown); }
-	void sendKeyLeft() { sendControl(KeyLeft); }
-	void sendKeyRight() { sendControl(KeyRight); }
-	void sendDebug(bool result) { sendControl(DebugPlayer, { result }); }
+	inline void pollChange() const
+		{ sendData("PollChange"); }
+
+	inline void acceptChallenge() const
+		{ sendData("AcceptChallenge"); }
+
+	inline void declineChallenge() const
+		{ sendData("DeclineChallenge"); }
+
+	// Send Key Controls
+	inline void sendKeyUp()
+		{ sendControl(KeyUp); }
+
+	inline void sendKeyDown()
+		{ sendControl(KeyDown); }
+
+	inline void sendKeyLeft()
+		{ sendControl(KeyLeft); }
+
+	inline void sendKeyRight()
+		{ sendControl(KeyRight); }
+
+	inline void sendDebug(bool result)
+		{ sendControl(DebugPlayer, { result }); }
+
+	// Send State Controls
+	void sendWinGame();
+	inline void sendRemovePoints(unsigned int num_points)
+		{ sendControl(RemovePoints, {num_points}); }
+
+	inline void sendGetSpecial(unsigned int special_type)
+		{ sendControl(GetSpecial, {special_type}); }
+
+	inline void sendSpawnShape(unsigned int shape_type, QColor shape_color)
+		{ sendControl(SpawnShape, {shape_type, shape_color}); }
+
+	inline void sendServicePlayer()
+		{ sendControl(ServicePlayer); }
 
 signals:
+
+	// Server Responses
 	void serverAddressChanged() const;
 	void loginSuccessful(const QString& username) const;
 	void loginFail() const;
-	void playerListReady(int score, const QList<QVariantMap>& online_players, const QList<QVariantMap>& leaderboard) const;
+	void playerListReady(int score, const QList<QVariantMap>& online_players,
+		const QList<QVariantMap>& leaderboard) const;
+
 	void challengeSent() const;
 	void challengeAlert(const QString& username) const;
 	void disconnected() const;
@@ -162,12 +176,14 @@ signals:
 	void challengeDeclined() const;
 	void startGame() const;
 
+	// Get Key Controls
 	void getKeyUp() const;
 	void getKeyDown() const;
 	void getKeyLeft() const;
 	void getKeyRight() const;
 	void getDebug(bool result) const;
 
+	// Get State Controls
 	void getRemovePoints(unsigned int num_points) const;
 	void getGetSpecial(unsigned int special_type) const;
 	void getWinGame() const;
