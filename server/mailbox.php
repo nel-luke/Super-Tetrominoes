@@ -54,7 +54,10 @@ class Mailbox {
 
     $new_message = [ 'type' => $message_type ];
     if (isset($data)) {
-      $new_message['data'] = [ $data ];
+      if (is_array($data))
+        $new_message['data'] = $data;
+      else
+        $new_message['data'] = [ $data ];
     }
 
     if ($_SESSION['created_mailbox']) {

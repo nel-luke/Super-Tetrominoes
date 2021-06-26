@@ -70,19 +70,20 @@ private:
 	QUrl server_address;
 	QList<control> control_log;
 	QVector<QJsonObject> control_queue;
+	QJsonArray send_queue;
 	int next_control_number;
 	int control_timer_id;
-	bool packet_is_lost;
 	int ready_timer_id;
 	int win_timer_id;
-	QString session_cookie;
+	int send_timer_id;
+	QString session_id;
+	bool packet_is_lost;
 	bool hold_control;
 
 	// Private Methods
-	void sendData(const QString& message_type, QJsonObject&& data = QJsonObject()) const;
+	void sendData(const QString& message_type, QJsonValue&& data = QJsonValue()) const;
 	void sendControl(ControlName control_name, QVariantList&& args = QVariantList());
 	QList<QVariantMap> makeList(const QJsonArray&& values) const;
-	//void makeLeaderboard(const QJsonArray& values) const;
 	void appendControls(QJsonArray&& data);
 
 	// Handlers
@@ -100,6 +101,7 @@ public:
 
 	// Constructors
 	explicit TetroClientQ(QObject *parent = nullptr);
+	~TetroClientQ() override;
 
 	// Getter Methods
 	inline QString serverAddress() const

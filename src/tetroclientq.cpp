@@ -1,24 +1,35 @@
 #include "tetroclientq.h"
 
+#ifndef QT_DEBUG
+	#define QT_NO_DEBUG_OUTPUT
+#endif
+
 // -- Constructor --
 TetroClientQ::TetroClientQ(QObject *parent) :
 		QObject(parent),
 		manager(new QNetworkAccessManager(this)),
 		control_log(),
 		control_queue(),
+		send_queue(),
 		next_control_number(0),
 		control_timer_id(0),
-		packet_is_lost(false),
 		ready_timer_id(0),
 		win_timer_id(0),
+		send_timer_id(0),
+		packet_is_lost(false),
 		hold_control(false) {
 
 	connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(getReply(QNetworkReply*)));
+	send_timer_id = startTimer(500);
+}
+
+TetroClientQ::~TetroClientQ() {
+	killTimer(send_timer_id);
 }
 
 
 // -- Private Methods --
-void TetroClientQ::sendData(const QString& message_type, QJsonObject&& data) const {
+void TetroClientQ::sendData(const QString& message_type, QJsonValue&& data) const {
 	QNetworkRequest request(server_address);
 
 	request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
@@ -26,7 +37,7 @@ void TetroClientQ::sendData(const QString& message_type, QJsonObject&& data) con
 	QJsonObject json;
 	json["type"] = message_type;
 	json["data"] = data;
-	json["cookie"] = session_cookie;
+	json["cookie"] = session_id;
 	QJsonDocument doc(json);
 
 	manager->post(request, doc.toJson());
@@ -40,7 +51,9 @@ void TetroClientQ::sendControl(ControlName control_name, QVariantList&& args) {
 
 	control_log.push_back({ control_name, args });
 
-	sendData("Control", std::move(json));
+	send_queue.push_back(std::move(json));
+
+	//sendData("Control", std::move(json));
 }
 
 QList<QVariantMap> TetroClientQ::makeList(const QJsonArray&& values) const {
@@ -78,7 +91,7 @@ void TetroClientQ::appendControls(QJsonArray&& data) {
 
 		if (!control_queue.isEmpty() && !packet_is_lost) {
 			control_timer_id = startTimer(15);
-			//qDebug() << "Starting timer " << control_timer_id;
+			qDebug() << "Starting timer " << control_timer_id;
 		}
 	}
 }
@@ -101,7 +114,7 @@ void TetroClientQ::handleControl() {
 	if (control_queue.isEmpty()) {
 		if (control_timer_id != 0) {
 			killTimer(control_timer_id);
-			//qDebug() << "Stopping timer " << control_timer_id;
+			qDebug() << "Stopping timer " << control_timer_id;
 			control_timer_id = 0;
 		}
 	} else {
@@ -109,28 +122,36 @@ void TetroClientQ::handleControl() {
 
 		if (control_number == -1) {
 			int to_send = control_queue[0]["args"].toInt();
-			//qDebug() << "Sending control " << to_send;
+			qDebug() << "Sending controls " << to_send << " to " << control_log.size()-1;
 			if (to_send > control_log.size())
 				return;
 
-			control a = control_log[to_send];
+			QJsonArray array;
+			for (int i = to_send; i < control_log.size(); i++) {
+				control a = control_log[i];
 
-			QJsonObject json;
-			json["control_number"] = to_send;
-			json["control_name"] = a.name;
-			json["args"] = QJsonArray::fromVariantList(a.args);
-			sendData("Control", std::move(json));
+				QJsonObject json;
+				json["control_number"] = i;
+				json["control_name"] = a.name;
+				json["args"] = QJsonArray::fromVariantList(a.args);
+				array.push_back(json);
+			}
+			QJsonDocument doc(array);
+
+			qDebug().noquote() << doc.toJson();
+
+			sendData("Control", std::move(array));
 
 			control_queue.pop_front();
 			handleControl();
 			return;
 		} else if (control_number < next_control_number) {
-			//qDebug() << "Duplicate skipped";
+			qDebug() << "Duplicate skipped (" << control_number << ")";
 			control_queue.pop_front();
 			handleControl();
 			return;
 		} else if (control_number > next_control_number) {
-			//qDebug() << "Packet " << next_control_number << " Lost!";
+			qDebug() << "Packet " << next_control_number << " Lost!";
 			QJsonObject json;
 			json["control_number"] = -1;
 			json["args"] = next_control_number;
@@ -139,7 +160,7 @@ void TetroClientQ::handleControl() {
 			packet_is_lost = true;
 
 			if (control_timer_id != 0) {
-				//qDebug() << "Lost stopped timer " << control_timer_id;
+				qDebug() << "Lost stopped timer " << control_timer_id;
 				killTimer(control_timer_id);
 				control_timer_id = 0;
 			}
@@ -148,7 +169,7 @@ void TetroClientQ::handleControl() {
 
 		packet_is_lost = false;
 
-		//qDebug() << "Control number " << control_number;
+		qDebug() << "Control number " << control_number;
 		QVariantList args = control_queue[0]["args"].toArray().toVariantList();
 
 		switch (control_queue[0]["control_name"].toInt()) {
@@ -234,7 +255,11 @@ void TetroClientQ::timerEvent(QTimerEvent* event) {
 		sendData("Ready");
 	} else if (event_id == win_timer_id) {
 		sendControl(WinGame);
+	} else if (event_id == send_timer_id) {
+		if (!send_queue.isEmpty())
+			sendData("Control", std::move(send_queue));
 	}
+
 }
 // -- End (Protected Methods)
 
@@ -268,7 +293,7 @@ void TetroClientQ::getReply(QNetworkReply *reply) {
 
 	QJsonObject json = QJsonDocument::fromJson(str).object();
 
-	session_cookie = json["cookie"].toString();
+	session_id = json["cookie"].toString();
 
 	switch (json["type"].toInt()) {
 		case PhpEcho:

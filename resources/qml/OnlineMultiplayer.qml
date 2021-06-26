@@ -58,7 +58,7 @@ Item {
 
 	Timer {
 		id: pollTimer
-		interval: 250
+		interval: 500
 		repeat: true
 		onTriggered: { client.pollChange() }
 	}
