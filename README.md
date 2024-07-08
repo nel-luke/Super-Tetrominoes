@@ -1,7 +1,10 @@
 # Super Tetrominoes
 
 A player-vs-player falling-blocks game where clearing multiple rows is bad luck for your opponent.
-Play it now on http://play.super-tetrominoes.online
+
+Play it now on ~http://play.super-tetrominoes.online~ (The server has been taken down unfortunately).
+
+Or play it on one screen using the WASD and arrow keys for each player.
 
 ## Installation
 
